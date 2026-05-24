@@ -1,0 +1,279 @@
+{
+  "categories": [
+    {
+      "id": "cat-summer",
+      "name": "Summer Lawn",
+      "slug": "summer-lawn",
+      "type": "season",
+      "description": "Fresh summer lawn collections",
+      "image": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80"
+    },
+    {
+      "id": "cat-winter",
+      "name": "Winter Collection",
+      "slug": "winter-collection",
+      "type": "season",
+      "description": "Warm winter fabrics and khaddar",
+      "image": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80"
+    },
+    {
+      "id": "cat-eid",
+      "name": "Eid Collection",
+      "slug": "eid-collection",
+      "type": "season",
+      "description": "Festive Eid specials",
+      "image": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80"
+    },
+    {
+      "id": "cat-festive",
+      "name": "Festive",
+      "slug": "festive",
+      "type": "season",
+      "description": "Occasion wear and luxury pieces",
+      "image": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80"
+    },
+    {
+      "id": "cat-2pc",
+      "name": "2 Piece",
+      "slug": "2-piece",
+      "type": "product_type",
+      "description": "Shirt + trouser sets"
+    },
+    {
+      "id": "cat-3pc",
+      "name": "3 Piece",
+      "slug": "3-piece",
+      "type": "product_type",
+      "description": "Shirt + trouser + dupatta sets"
+    },
+    {
+      "id": "cat-embroidered",
+      "name": "Embroidered",
+      "slug": "embroidered",
+      "type": "product_type",
+      "description": "Hand and machine embroidered"
+    },
+    {
+      "id": "cat-printed",
+      "name": "Printed",
+      "slug": "printed",
+      "type": "product_type",
+      "description": "Digital and screen printed lawn"
+    },
+    {
+      "id": "cat-unstitched",
+      "name": "Unstitched",
+      "slug": "unstitched",
+      "type": "product_type",
+      "description": "Unstitched fabric sets"
+    },
+    {
+      "id": "cat-ready",
+      "name": "Ready to Wear",
+      "slug": "ready-to-wear",
+      "type": "product_type",
+      "description": "Stitched and ready to wear"
+    },
+    {
+      "id": "cat-patches",
+      "name": "Patches",
+      "slug": "patches",
+      "type": "product_type",
+      "description": "Embroidered patches and borders"
+    }
+  ],
+  "products": [
+    {
+      "id": "st-001",
+      "name": "Sapphire Unstitched Printed Lawn 3pc",
+      "description": "Premium digital printed lawn 3-piece suit. Shirt: digital printed lawn, Trouser: dyed cambric, Dupatta: printed chiffon. Perfect for summer outings.",
+      "price": 2390,
+      "originalPrice": 5890,
+      "images": [
+        "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80",
+        "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80"
+      ],
+      "categoryIds": ["cat-summer", "cat-3pc", "cat-printed", "cat-unstitched"],
+      "brand": "Sapphire",
+      "stock": 12,
+      "featured": true,
+      "isLatest": true,
+      "tags": ["lawn", "printed", "3pc", "sale"]
+    },
+    {
+      "id": "st-002",
+      "name": "Maria B. Embroidered Lawn 3pc",
+      "description": "Luxury embroidered lawn collection. Front embroidered shirt with matching dyed trouser and chiffon dupatta. Eid-ready elegance.",
+      "price": 3790,
+      "originalPrice": 7590,
+      "images": [
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80",
+        "https://images.unsplash.com/photo-1603217192098-b7c79b5e09c8?w=800&q=80"
+      ],
+      "categoryIds": ["cat-eid", "cat-3pc", "cat-embroidered", "cat-unstitched"],
+      "brand": "Maria B.",
+      "stock": 8,
+      "featured": true,
+      "isNew": true,
+      "tags": ["embroidered", "luxury", "3pc", "eid"]
+    },
+    {
+      "id": "st-003",
+      "name": "Khaadi Unstitched Printed Lawn 3pc",
+      "description": "Classic Khaadi printed lawn. Soft cotton lawn with vibrant prints. Includes shirt, trouser, and dupatta fabric.",
+      "price": 2350,
+      "originalPrice": 4700,
+      "images": [
+        "https://images.unsplash.com/photo-1570976446701-9b2b2e7f37b2?w=800&q=80",
+        "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80"
+      ],
+      "categoryIds": ["cat-summer", "cat-3pc", "cat-printed", "cat-unstitched"],
+      "brand": "Khaadi",
+      "stock": 15,
+      "featured": true,
+      "tags": ["khaadi", "printed", "lawn"]
+    },
+    {
+      "id": "st-004",
+      "name": "Designer Unstitched Printed Lawn 2pc",
+      "description": "Trendy 2-piece printed lawn set. Digital printed shirt with matching trouser fabric. Great value for everyday wear.",
+      "price": 1790,
+      "originalPrice": 4490,
+      "images": [
+        "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=800&q=80",
+        "https://images.unsplash.com/photo-1604176354204-9268737828e4?w=800&q=80"
+      ],
+      "categoryIds": ["cat-summer", "cat-2pc", "cat-printed", "cat-unstitched"],
+      "brand": "Designer",
+      "stock": 20,
+      "isLatest": true,
+      "tags": ["2pc", "printed", "budget"]
+    },
+    {
+      "id": "st-005",
+      "name": "Mahnur Stitched Printed Lawn 2pc",
+      "description": "Ready-to-wear stitched 2-piece. Digital printed lawn stitched shirt and trouser. No stitching needed — wear straight out of the box.",
+      "price": 2690,
+      "originalPrice": 4690,
+      "images": [
+        "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80",
+        "https://images.unsplash.com/photo-1594938298603-c8148e27f4d0?w=800&q=80"
+      ],
+      "categoryIds": ["cat-summer", "cat-2pc", "cat-printed", "cat-ready"],
+      "brand": "Mahnur",
+      "stock": 6,
+      "featured": true,
+      "isNew": true,
+      "tags": ["stitched", "2pc", "ready"]
+    },
+    {
+      "id": "st-006",
+      "name": "Johra Embroidered Lawn 3pc",
+      "description": "Premium embroidered lawn 3-piece. Intricate thread work on front and sleeves with dyed cambric trouser and chiffon dupatta.",
+      "price": 4699,
+      "originalPrice": 6290,
+      "images": [
+        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80",
+        "https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=800&q=80"
+      ],
+      "categoryIds": ["cat-festive", "cat-3pc", "cat-embroidered", "cat-unstitched"],
+      "brand": "Johra",
+      "stock": 5,
+      "tags": ["embroidered", "festive", "3pc"]
+    },
+    {
+      "id": "st-007",
+      "name": "Sapphire Embroidered Neckline Patch",
+      "description": "Premium embroidered neckline patch. Perfect add-on for plain suits. Iron-on ready with detailed tilla work.",
+      "price": 450,
+      "originalPrice": 600,
+      "images": [
+        "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&q=80",
+        "https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?w=800&q=80"
+      ],
+      "categoryIds": ["cat-patches"],
+      "brand": "Sapphire",
+      "stock": 25,
+      "isLatest": true,
+      "tags": ["patch", "neckline", "addon"]
+    },
+    {
+      "id": "st-008",
+      "name": "Maria B. Dyeable Complete Set",
+      "description": "Complete dyeable creamy skin shirt set — front, back, and sleeves borders. Premium milky lace finish.",
+      "price": 2200,
+      "images": [
+        "https://images.unsplash.com/photo-1607345366928-199ea26cfe3e?w=800&q=80",
+        "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?w=800&q=80"
+      ],
+      "categoryIds": ["cat-patches", "cat-embroidered"],
+      "brand": "Maria B.",
+      "stock": 10,
+      "tags": ["dyeable", "set", "borders"]
+    },
+    {
+      "id": "st-009",
+      "name": "Winter Khaddar Printed 2pc",
+      "description": "Warm khaddar printed 2-piece for winter. Soft brushed fabric with rich prints. Shirt and trouser included.",
+      "price": 2190,
+      "originalPrice": 3490,
+      "images": [
+        "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80",
+        "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&q=80"
+      ],
+      "categoryIds": ["cat-winter", "cat-2pc", "cat-printed", "cat-unstitched"],
+      "brand": "Premium",
+      "stock": 14,
+      "featured": true,
+      "tags": ["khaddar", "winter", "2pc"]
+    },
+    {
+      "id": "st-010",
+      "name": "Eid Luxury Embroidered 3pc",
+      "description": "Ultimate luxury Eid collection. Heavy embroidered front with sequin details, silk trouser, and organza dupatta with 4-side border.",
+      "price": 6690,
+      "originalPrice": 7990,
+      "images": [
+        "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=800&q=80",
+        "https://images.unsplash.com/photo-1603217192098-b7c79b5e09c8?w=800&q=80"
+      ],
+      "categoryIds": ["cat-eid", "cat-festive", "cat-3pc", "cat-embroidered"],
+      "brand": "Mahnur",
+      "stock": 4,
+      "featured": true,
+      "isNew": true,
+      "tags": ["eid", "luxury", "embroidered"]
+    },
+    {
+      "id": "st-011",
+      "name": "Crossstitch Yard Border Light Blue",
+      "description": "Beautiful crossstitch yard border in light blue. 1 yard length, perfect for daman and sleeves.",
+      "price": 250,
+      "originalPrice": 400,
+      "images": [
+        "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&q=80"
+      ],
+      "categoryIds": ["cat-patches"],
+      "brand": "Crossstitch",
+      "stock": 30,
+      "tags": ["border", "patch", "sale"]
+    },
+    {
+      "id": "st-012",
+      "name": "Lime Light Unstitched Printed Lawn 3pc",
+      "description": "Lime Light signature printed lawn. Fresh summer prints on premium cotton lawn with matching accessories.",
+      "price": 3250,
+      "originalPrice": 4990,
+      "images": [
+        "https://images.unsplash.com/photo-1570976446701-9b2b2e7f37b2?w=800&q=80",
+        "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80"
+      ],
+      "categoryIds": ["cat-summer", "cat-3pc", "cat-printed", "cat-unstitched"],
+      "brand": "Lime Light",
+      "stock": 9,
+      "isLatest": true,
+      "tags": ["limelight", "3pc", "lawn"]
+    }
+  ],
+  "orders": []
+}

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&amp;family=Montserrat:wght@200;300;400;600&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1080" height="1080" fill="#0F0F0F"/>
+
+  <!-- Top thin line -->
+  <line x1="200" y1="320" x2="880" y2="320" stroke="#333333" stroke-width="1"/>
+
+  <!-- STUDIO text -->
+  <text
+    x="540"
+    y="480"
+    text-anchor="middle"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="72"
+    font-weight="300"
+    fill="#FFFFFF"
+    letter-spacing="28"
+  >STUDIO</text>
+
+  <!-- XIII text in red -->
+  <text
+    x="540"
+    y="660"
+    text-anchor="middle"
+    font-family="'Cormorant Garamond', 'Georgia', 'Times New Roman', serif"
+    font-size="220"
+    font-weight="300"
+    fill="#CC1A1A"
+    letter-spacing="12"
+  >XIII</text>
+
+  <!-- Bottom thin line -->
+  <line x1="200" y1="720" x2="880" y2="720" stroke="#333333" stroke-width="1"/>
+
+  <!-- Tagline -->
+  <text
+    x="540"
+    y="780"
+    text-anchor="middle"
+    font-family="'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+    font-size="22"
+    font-weight="300"
+    fill="#666666"
+    letter-spacing="8"
+  >CURATED CLOTHING</text>
+
+</svg>
