@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { Pool } from "@neondatabase/serverless";
@@ -16,15 +16,21 @@ if (!url) {
   process.exit(1);
 }
 
-const migrationPath = join(__dirname, "../db/migrations/001_ecommerce.sql");
-const migration = readFileSync(migrationPath, "utf-8");
+const migrationsDir = join(__dirname, "../db/migrations");
+const files = readdirSync(migrationsDir)
+  .filter((f) => f.endsWith(".sql"))
+  .sort();
 
 async function migrate() {
   const pool = new Pool({ connectionString: url });
   console.log("Running Neon migrations...");
   try {
-    await pool.query(migration);
-    console.log("Migration complete.");
+    for (const file of files) {
+      const sql = readFileSync(join(migrationsDir, file), "utf-8");
+      console.log(`  → ${file}`);
+      await pool.query(sql);
+    }
+    console.log("All migrations complete.");
   } finally {
     await pool.end();
   }

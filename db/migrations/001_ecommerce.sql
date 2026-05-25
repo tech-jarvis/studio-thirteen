@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS orders (
   total INTEGER NOT NULL CHECK (total >= 0),
   payment_method TEXT NOT NULL CHECK (payment_method IN ('cod', 'online')),
   payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed')),
-  order_status TEXT NOT NULL DEFAULT 'pending' CHECK (order_status IN ('pending', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+  order_status TEXT NOT NULL DEFAULT 'pending' CHECK (order_status IN ('pending', 'paid', 'confirmed', 'shipped', 'delivered', 'cancelled')),
+  payment_screenshot TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

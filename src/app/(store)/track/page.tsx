@@ -78,7 +78,10 @@ function TrackContent() {
           <div className="text-sm space-y-2 pt-4 border-t border-stone-100">
             <div className="flex justify-between">
               <span className="text-stone-500">Payment</span>
-              <span className="capitalize">{order.paymentMethod === "cod" ? "Cash on Delivery" : "Online"} — {order.paymentStatus}</span>
+              <span>
+                {order.paymentMethod === "cod" ? "Cash on Delivery" : "Bank transfer"} —{" "}
+                <span className="capitalize">{order.orderStatus}</span>
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-stone-500">Total</span>

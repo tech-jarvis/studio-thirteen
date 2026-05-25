@@ -138,11 +138,11 @@ export default function CheckoutPage() {
                 <input type="radio" name="payment" value="online" checked={paymentMethod === "online"} onChange={() => setPaymentMethod("online")} className="mt-1" />
                 <div>
                   <div className="flex items-center gap-2 font-medium text-stone-900">
-                    <CreditCard size={18} /> Advance Payment (Online)
+                    <CreditCard size={18} /> Bank / Wallet Transfer
                     <span className="text-xs bg-rose-600 text-white px-2 py-0.5 rounded">{ONLINE_DISCOUNT_PERCENT}% OFF</span>
                   </div>
                   <p className="text-sm text-stone-500 mt-1">
-                    Pay now via card, bank transfer, or mobile wallet. Save {ONLINE_DISCOUNT_PERCENT}% on your order total.
+                    Transfer to our account, upload payment screenshot, then confirm your order. Save {ONLINE_DISCOUNT_PERCENT}%.
                   </p>
                 </div>
               </label>

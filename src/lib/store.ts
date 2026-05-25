@@ -85,6 +85,10 @@ export async function updateOrder(id: string, updates: Partial<Order>) {
   return neon.dbUpdateOrder(id, updates);
 }
 
+export async function attachOrderPaymentProof(id: string, paymentScreenshot: string) {
+  return neon.dbUpdateOrder(id, { paymentScreenshot });
+}
+
 export async function listAllProductsAdmin() {
   return neon.dbListAllProducts();
 }

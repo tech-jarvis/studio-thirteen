@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
 
   const pendingOrders = orders.filter((o) => o.orderStatus === "pending").length;
   const totalRevenue = orders
-    .filter((o) => o.paymentStatus === "paid" || o.paymentMethod === "cod")
+    .filter((o) => o.orderStatus !== "cancelled")
     .reduce((sum, o) => sum + o.total, 0);
 
   return (

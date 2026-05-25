@@ -44,6 +44,7 @@ export type DbOrder = {
   payment_method: Order["paymentMethod"];
   payment_status: Order["paymentStatus"];
   order_status: Order["orderStatus"];
+  payment_screenshot: string | null;
   created_at: string;
 };
 
@@ -95,6 +96,7 @@ export function mapOrder(row: DbOrder): Order {
     paymentMethod: row.payment_method,
     paymentStatus: row.payment_status,
     orderStatus: row.order_status,
+    paymentScreenshot: row.payment_screenshot ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -147,6 +149,7 @@ export function orderToDb(order: Order) {
     payment_method: order.paymentMethod,
     payment_status: order.paymentStatus,
     order_status: order.orderStatus,
+    payment_screenshot: order.paymentScreenshot ?? null,
     created_at: order.createdAt,
   };
 }

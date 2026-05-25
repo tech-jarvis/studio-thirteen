@@ -1,18 +1,34 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { formatPrice } from "@/lib/format";
-import { CreditCard, Smartphone, Building2 } from "lucide-react";
+import { Order } from "@/lib/types";
+import { PaymentAccountDetails } from "@/lib/payment-details";
+import { Upload, Building2, Smartphone } from "lucide-react";
 
 function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
-  const [method, setMethod] = useState<"card" | "bank" | "wallet">("card");
+  const [order, setOrder] = useState<Order | null>(null);
+  const [accounts, setAccounts] = useState<PaymentAccountDetails | null>(null);
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!orderId) return;
+    fetch(`/api/orders/${orderId}`)
+      .then((r) => r.json())
+      .then(setOrder);
+    fetch("/api/payment/details")
+      .then((r) => r.json())
+      .then(setAccounts);
+  }, [orderId]);
 
   if (!orderId) {
     return (
@@ -23,20 +39,56 @@ function PaymentContent() {
     );
   }
 
-  async function handlePay() {
+  if (!order || !accounts) {
+    return (
+      <main className="max-w-xl mx-auto px-4 py-20 text-center text-stone-400">
+        Loading...
+      </main>
+    );
+  }
+
+  if (order.paymentScreenshot) {
+    return (
+      <main className="max-w-xl mx-auto px-4 py-20 text-center">
+        <p className="text-stone-700 font-medium mb-2">Payment proof already submitted</p>
+        <p className="text-sm text-stone-500 mb-6">We will verify your payment and update your order.</p>
+        <Link href={`/order/${orderId}?submitted=1`} className="text-rose-600 hover:underline">
+          View order
+        </Link>
+      </main>
+    );
+  }
+
+  function onFileChange(file: File | null) {
+    setScreenshot(file);
+    if (preview) URL.revokeObjectURL(preview);
+    setPreview(file ? URL.createObjectURL(file) : null);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!screenshot) {
+      setError("Please upload your payment screenshot.");
+      return;
+    }
+
     setLoading(true);
     setError("");
+
     try {
-      await new Promise((r) => setTimeout(r, 1500));
-      const res = await fetch("/api/payment/confirm", {
+      const formData = new FormData();
+      formData.append("screenshot", screenshot);
+
+      const res = await fetch(`/api/orders/${orderId}/payment-proof`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
+        body: formData,
       });
-      if (!res.ok) throw new Error("Payment failed");
-      router.push(`/order/${orderId}?paid=1`);
-    } catch {
-      setError("Payment could not be processed. Please try again.");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+
+      router.push(`/order/${orderId}?submitted=1`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -44,76 +96,75 @@ function PaymentContent() {
 
   return (
     <main className="max-w-lg mx-auto px-4 py-10">
-      <h1 className="text-2xl font-semibold text-stone-900 mb-2">Complete Payment</h1>
-      <p className="text-sm text-stone-500 mb-8">
-        Your 5% advance payment discount has been applied. Choose a payment method below.
+      <h1 className="text-2xl font-semibold text-stone-900 mb-2">Pay &amp; confirm order</h1>
+      <p className="text-sm text-stone-500 mb-2">
+        Order <strong>#{order.orderNumber}</strong> — pay{" "}
+        <strong>{formatPrice(order.total)}</strong> then upload proof.
       </p>
+      {order.discount > 0 && (
+        <p className="text-xs text-rose-600 mb-6">
+          {order.discountPercent}% advance payment discount applied.
+        </p>
+      )}
 
-      <div className="space-y-3 mb-8">
-        {[
-          { id: "card" as const, label: "Credit / Debit Card", icon: CreditCard },
-          { id: "bank" as const, label: "Bank Transfer", icon: Building2 },
-          { id: "wallet" as const, label: "JazzCash / EasyPaisa", icon: Smartphone },
-        ].map(({ id, label, icon: Icon }) => (
-          <label
-            key={id}
-            className={`flex items-center gap-3 p-4 border cursor-pointer ${method === id ? "border-rose-600 bg-rose-50" : "border-stone-200"}`}
-          >
-            <input type="radio" checked={method === id} onChange={() => setMethod(id)} />
-            <Icon size={20} />
-            <span className="text-sm font-medium">{label}</span>
-          </label>
-        ))}
+      <div className="mb-8 p-4 bg-stone-50 border border-stone-200 text-sm space-y-3">
+        <p className="font-medium text-stone-900 flex items-center gap-2">
+          <Building2 size={16} /> Bank transfer
+        </p>
+        <div className="text-stone-600 space-y-1">
+          <p><strong>Bank:</strong> {accounts.bankName}</p>
+          <p><strong>Account title:</strong> {accounts.accountTitle}</p>
+          <p><strong>Account #:</strong> {accounts.accountNumber}</p>
+          <p><strong>IBAN:</strong> {accounts.iban}</p>
+        </div>
+        {(accounts.jazzCash || accounts.easyPaisa) && (
+          <>
+            <p className="font-medium text-stone-900 flex items-center gap-2 pt-2">
+              <Smartphone size={16} /> Mobile wallets
+            </p>
+            <div className="text-stone-600 space-y-1">
+              {accounts.jazzCash && <p><strong>JazzCash:</strong> {accounts.jazzCash}</p>}
+              {accounts.easyPaisa && <p><strong>EasyPaisa:</strong> {accounts.easyPaisa}</p>}
+            </div>
+          </>
+        )}
+        <p className="text-xs text-stone-500 pt-2">{accounts.instructions}</p>
       </div>
 
-      {method === "card" && (
-        <div className="space-y-4 mb-8 p-4 bg-stone-50 border border-stone-100">
-          <label className="block">
-            <span className="text-xs text-stone-500">Card Number</span>
-            <input placeholder="4242 4242 4242 4242" className="mt-1 w-full border border-stone-200 px-3 py-2 text-sm" />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-2">
+            Payment screenshot *
           </label>
-          <div className="grid grid-cols-2 gap-4">
-            <label className="block">
-              <span className="text-xs text-stone-500">Expiry</span>
-              <input placeholder="MM/YY" className="mt-1 w-full border border-stone-200 px-3 py-2 text-sm" />
-            </label>
-            <label className="block">
-              <span className="text-xs text-stone-500">CVV</span>
-              <input placeholder="123" className="mt-1 w-full border border-stone-200 px-3 py-2 text-sm" />
-            </label>
-          </div>
-          <p className="text-xs text-stone-400">Demo payment — no real charge will be made.</p>
-        </div>
-      )}
-
-      {method === "bank" && (
-        <div className="mb-8 p-4 bg-stone-50 border border-stone-100 text-sm text-stone-600 space-y-1">
-          <p><strong>Bank:</strong> HBL</p>
-          <p><strong>Account:</strong> Studio Thirteen</p>
-          <p><strong>IBAN:</strong> PK00HABB00000000000000</p>
-          <p className="text-xs text-stone-400 pt-2">Demo — click Pay Now to simulate confirmation.</p>
-        </div>
-      )}
-
-      {method === "wallet" && (
-        <div className="mb-8 p-4 bg-stone-50 border border-stone-100">
-          <label className="block">
-            <span className="text-xs text-stone-500">Mobile Number</span>
-            <input placeholder="03XX-XXXXXXX" className="mt-1 w-full border border-stone-200 px-3 py-2 text-sm" />
+          <label className="flex flex-col items-center justify-center border-2 border-dashed border-stone-200 p-8 cursor-pointer hover:border-stone-400 transition-colors">
+            <Upload className="text-stone-400 mb-2" size={28} />
+            <span className="text-sm text-stone-500">
+              {screenshot ? screenshot.name : "Tap to upload screenshot"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+            />
           </label>
-          <p className="text-xs text-stone-400 mt-2">Demo — click Pay Now to simulate confirmation.</p>
+          {preview && (
+            <div className="mt-4 relative aspect-video border border-stone-200">
+              <Image src={preview} alt="Payment preview" fill className="object-contain" unoptimized />
+            </div>
+          )}
         </div>
-      )}
 
-      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
-      <button
-        onClick={handlePay}
-        disabled={loading}
-        className="w-full bg-rose-600 text-white py-3.5 text-sm font-medium hover:bg-rose-700 transition-colors disabled:opacity-50"
-      >
-        {loading ? "Processing..." : "Pay Now"}
-      </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-stone-900 text-white py-3.5 text-sm font-medium hover:bg-rose-600 transition-colors disabled:opacity-50"
+        >
+          {loading ? "Submitting..." : "Submit payment & confirm order"}
+        </button>
+      </form>
     </main>
   );
 }

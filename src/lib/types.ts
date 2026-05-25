@@ -37,6 +37,7 @@ export type PaymentMethod = "cod" | "online";
 export type PaymentStatus = "pending" | "paid" | "failed";
 export type OrderStatus =
   | "pending"
+  | "paid"
   | "confirmed"
   | "shipped"
   | "delivered"
@@ -67,6 +68,7 @@ export interface Order {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
+  paymentScreenshot?: string;
   createdAt: string;
 }
 

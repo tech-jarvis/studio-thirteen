@@ -266,12 +266,13 @@ export async function dbAddOrder(order: Order) {
       INSERT INTO orders (
         id, order_number, customer_name, phone, email, address, city, notes,
         items, subtotal, shipping, discount, discount_percent, total,
-        payment_method, payment_status, order_status, created_at
+        payment_method, payment_status, order_status, payment_screenshot, created_at
       ) VALUES (
         ${db.id}, ${db.order_number}, ${db.customer_name}, ${db.phone}, ${db.email},
         ${db.address}, ${db.city}, ${db.notes}, ${JSON.stringify(db.items)}::jsonb,
         ${db.subtotal}, ${db.shipping}, ${db.discount}, ${db.discount_percent}, ${db.total},
-        ${db.payment_method}, ${db.payment_status}, ${db.order_status}, ${db.created_at}
+        ${db.payment_method}, ${db.payment_status}, ${db.order_status},
+        ${db.payment_screenshot}, ${db.created_at}
       ) RETURNING *
     `,
   ]);
@@ -292,7 +293,8 @@ export async function dbUpdateOrder(id: string, updates: Partial<Order>) {
   const rows = (await sql`
     UPDATE orders SET
       payment_status = COALESCE(${updates.paymentStatus ?? null}, payment_status),
-      order_status = COALESCE(${updates.orderStatus ?? null}, order_status)
+      order_status = COALESCE(${updates.orderStatus ?? null}, order_status),
+      payment_screenshot = COALESCE(${updates.paymentScreenshot ?? null}, payment_screenshot)
     WHERE id = ${id}
     RETURNING *
   `) as DbOrder[];
