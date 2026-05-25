@@ -8,16 +8,27 @@ import { Category, Product } from "./types";
 
 export { getCategories, getCategoryBySlug, getProductById, getProducts };
 
-export async function getFeatured() {
-  return getProducts({ featured: true });
+export async function getFeatured(limit = 4) {
+  const result = await getProducts({ featured: true }, { page: 1, pageSize: limit });
+  return result.items;
 }
 
-export async function getNewArrivals() {
-  return getProducts({ isNew: true });
+export async function getNewArrivals(limit = 4) {
+  const result = await getProducts({ isNew: true }, { page: 1, pageSize: limit });
+  return result.items;
 }
 
-export async function getLatestProducts() {
-  return getProducts({ isLatest: true });
+export async function getLatestProducts(limit = 4) {
+  const result = await getProducts({ isLatest: true }, { page: 1, pageSize: limit });
+  return result.items;
+}
+
+export async function getById(id: string) {
+  return getProductById(id);
+}
+
+export async function getByCategorySlug(slug: string, page = 1, pageSize = 24) {
+  return getProducts({ categorySlug: slug }, { page, pageSize });
 }
 
 export async function getProductsWithCategories(products: Product[]) {
@@ -29,12 +40,4 @@ export async function getProductsWithCategories(products: Product[]) {
       .map((id) => categoryMap.get(id))
       .filter(Boolean) as Category[],
   }));
-}
-
-export async function getById(id: string) {
-  return getProductById(id);
-}
-
-export async function getByCategorySlug(slug: string) {
-  return getProducts({ categorySlug: slug });
 }

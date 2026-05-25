@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import {
-  addProduct,
-  deleteProduct,
-  getProducts,
-  updateProduct,
-} from "@/lib/store";
+import { listAllProductsAdmin, addProduct, updateProduct, deleteProduct } from "@/lib/store";
 import { Product } from "@/lib/types";
-
-async function requireAdmin() {
-  const ok = await isAdminAuthenticated();
-  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return null;
-}
 
 export async function GET() {
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const products = await getProducts();
-  return NextResponse.json(products);
+  try {
+    const products = await listAllProductsAdmin();
+    return NextResponse.json(products);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to load products";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -43,8 +37,13 @@ export async function POST(request: NextRequest) {
     tags: body.tags ?? [],
   };
 
-  await addProduct(product);
-  return NextResponse.json(product, { status: 201 });
+  try {
+    await addProduct(product);
+    return NextResponse.json(product, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to add product";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function PATCH(request: NextRequest) {
@@ -74,6 +73,16 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Product id required" }, { status: 400 });
   }
 
-  await deleteProduct(id);
-  return NextResponse.json({ success: true });
+  try {
+    await deleteProduct(id);
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
+  }
+}
+
+async function requireAdmin() {
+  const ok = await isAdminAuthenticated();
+  if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return null;
 }

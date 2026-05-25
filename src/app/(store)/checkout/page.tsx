@@ -63,8 +63,6 @@ export default function CheckoutPage() {
           paymentMethod,
           items: items.map((i) => ({
             productId: i.productId,
-            productName: i.name,
-            price: i.price,
             quantity: i.quantity,
           })),
         }),

@@ -22,18 +22,41 @@ export default function AdminProductsPage() {
     isLatest: false,
   });
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [storageBackend, setStorageBackend] = useState<string>("local-json");
 
   function load() {
     Promise.all([
       fetch("/api/admin/products").then((r) => r.json()),
       fetch("/api/admin/categories").then((r) => r.json()),
-    ]).then(([prods, cats]) => {
+      fetch("/api/storage/status").then((r) => r.json()),
+    ]).then(([prods, cats, status]) => {
       setProducts(prods);
       setCategories(cats);
+      setStorageBackend(status.backend ?? "local-json");
     });
   }
 
   useEffect(() => { load(); }, []);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setForm((f) => ({ ...f, image: data.url }));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
 
   function toggleCategory(id: string) {
     setForm((f) => ({
@@ -84,7 +107,12 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-stone-900 mb-8">Products</h1>
+      <h1 className="text-2xl font-semibold text-stone-900 mb-2">Products</h1>
+      <p className="text-sm text-stone-500 mb-8">
+        Data: <span className="font-medium">Neon Postgres</span>
+        {" · "}
+        Images: <span className="font-medium">Local uploads</span>
+      </p>
 
       <form onSubmit={handleAdd} className="bg-white border border-stone-200 p-6 mb-8 space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -93,7 +121,17 @@ export default function AdminProductsPage() {
           <input required type="number" placeholder="Price (Rs.)" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="border border-stone-200 px-3 py-2 text-sm" />
           <input type="number" placeholder="Original price (optional)" value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} className="border border-stone-200 px-3 py-2 text-sm" />
           <input type="number" placeholder="Stock" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} className="border border-stone-200 px-3 py-2 text-sm" />
-          <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="border border-stone-200 px-3 py-2 text-sm sm:col-span-2" />
+          <div className="sm:col-span-2 space-y-2">
+            <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full border border-stone-200 px-3 py-2 text-sm" />
+            <label className="inline-flex items-center gap-2 text-sm text-stone-600 cursor-pointer">
+              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="text-xs" />
+              {uploading ? "Uploading..." : "Upload product image"}
+            </label>
+            {form.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.image} alt="Preview" className="h-20 w-20 object-cover border border-stone-200" />
+            )}
+          </div>
         </div>
         <textarea required placeholder="Description" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full border border-stone-200 px-3 py-2 text-sm" />
 

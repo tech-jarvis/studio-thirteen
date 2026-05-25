@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { getOrders, getProducts, getCategories } from "@/lib/store";
+import { getOrders, getCategories, listAllProductsAdmin } from "@/lib/store";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 
@@ -10,7 +10,7 @@ export default async function AdminDashboard() {
 
   const [orders, products, categories] = await Promise.all([
     getOrders(),
-    getProducts(),
+    listAllProductsAdmin(),
     getCategories(),
   ]);
 

@@ -8,6 +8,8 @@ import {
   getCategories,
 } from "@/lib/products";
 
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [featured, latest, newArrivals, categories] = await Promise.all([
     getFeatured(),
