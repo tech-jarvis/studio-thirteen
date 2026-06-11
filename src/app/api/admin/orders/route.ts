@@ -21,10 +21,14 @@ export async function PATCH(request: NextRequest) {
   if (authError) return authError;
 
   const body = await request.json();
-  const { id, ...updates } = body;
+  const { id } = body;
   if (!id) {
     return NextResponse.json({ error: "Order id required" }, { status: 400 });
   }
+
+  const updates: Parameters<typeof updateOrder>[1] = {};
+  if (body.orderStatus !== undefined) updates.orderStatus = body.orderStatus;
+  if (body.paymentStatus !== undefined) updates.paymentStatus = body.paymentStatus;
 
   try {
     const order = await updateOrder(id, updates);

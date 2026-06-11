@@ -7,6 +7,7 @@ import { formatPrice } from "@/lib/format";
 import { Order } from "@/lib/types";
 import { use } from "react";
 import { CheckCircle } from "lucide-react";
+import { SITE, getWhatsAppUrl } from "@/lib/site-config";
 
 function OrderContent({ id }: { id: string }) {
   const searchParams = useSearchParams();
@@ -51,15 +52,25 @@ function OrderContent({ id }: { id: string }) {
         {subtitle && <p className="text-sm text-stone-500 mt-3 max-w-md mx-auto">{subtitle}</p>}
       </div>
 
-      {confirmed && order.paymentMethod === "online" && !order.paymentScreenshot && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-sm text-center">
-          <p className="text-amber-900 mb-3">Payment not completed yet.</p>
-          <Link
-            href={`/checkout/payment?orderId=${order.id}`}
-            className="inline-block bg-stone-900 text-white px-6 py-2.5 text-sm hover:bg-rose-600"
-          >
-            Pay &amp; upload screenshot
-          </Link>
+      {order.paymentMethod === "online" &&
+        !order.paymentScreenshot &&
+        order.orderStatus !== "cancelled" && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-sm text-center">
+            <p className="text-amber-900 mb-3">
+              Payment not completed yet. Transfer the total and upload your screenshot to confirm this order.
+            </p>
+            <Link
+              href={`/checkout/payment?orderId=${order.id}`}
+              className="inline-block bg-stone-900 text-white px-6 py-2.5 text-sm hover:bg-rose-600"
+            >
+              Pay &amp; upload screenshot
+            </Link>
+          </div>
+        )}
+
+      {order.paymentMethod === "online" && order.paymentScreenshot && (
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-sm text-center text-emerald-800">
+          Payment proof received. We will verify and confirm your order shortly.
         </div>
       )}
 
@@ -113,6 +124,22 @@ function OrderContent({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      <p className="text-sm text-stone-500 text-center mb-6">
+        Questions?{" "}
+        <a
+          href={getWhatsAppUrl(`Hi, about order ${order.orderNumber}`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#128C7E] hover:underline"
+        >
+          WhatsApp {SITE.phone}
+        </a>
+        {" · "}
+        <a href={`mailto:${SITE.email}`} className="text-stone-600 hover:underline">
+          {SITE.email}
+        </a>
+      </p>
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Link href={`/track?order=${order.orderNumber}`} className="px-6 py-3 bg-stone-900 text-white text-sm font-medium text-center hover:bg-rose-600 transition-colors">

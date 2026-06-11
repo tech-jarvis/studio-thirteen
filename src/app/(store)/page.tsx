@@ -44,7 +44,7 @@ export default async function HomePage() {
           </h1>
           <p className="text-stone-300 text-base max-w-md mb-8">
             Unstitched 2pc &amp; 3pc, embroidered collections, and patches.
-            Minimum order Rs. 1,000. Get 5% off when you pay in advance.
+            Minimum order Rs. 1,000. Cash on delivery, or pay by bank transfer for 5% off.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -142,11 +142,11 @@ export default async function HomePage() {
       <section className="bg-rose-700 py-14 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-white text-2xl sm:text-3xl font-semibold mb-3">
-            5% Off on Advance Payment
+            5% Off on Bank Transfer
           </h2>
           <p className="text-rose-100 text-sm mb-6 leading-relaxed">
-            Pay online at checkout and save 5% instantly. Cash on delivery also
-            available — choose what works for you.
+            Transfer to our account and upload your payment screenshot to save 5%.
+            Prefer cash on delivery? That works too — choose at checkout.
           </p>
           <Link
             href="/shop"

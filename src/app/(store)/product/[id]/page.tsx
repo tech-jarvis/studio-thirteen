@@ -30,9 +30,10 @@ export default function ProductPage({
       })
       .then((p: Product) => {
         setProduct(p);
-        fetch("/api/products")
+        fetch("/api/products?pageSize=12")
           .then((r) => r.json())
-          .then((list: Product[]) =>
+          .then((data: { items?: Product[] }) => {
+            const list = Array.isArray(data.items) ? data.items : [];
             setRelated(
               list
                 .filter(
@@ -41,8 +42,9 @@ export default function ProductPage({
                     x.categoryIds.some((cid) => p.categoryIds.includes(cid))
                 )
                 .slice(0, 4)
-            )
-          );
+            );
+          })
+          .catch(() => setRelated([]));
       })
       .catch(() => setProduct(null));
   }, [id]);

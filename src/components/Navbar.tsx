@@ -33,7 +33,7 @@ export default function Navbar() {
     <>
       <div className="bg-rose-700 text-white text-center text-xs py-2 px-4 tracking-wide">
         Minimum order Rs. 1,000 · Delivery 3–5 days ·{" "}
-        <span className="font-semibold">5% off on advance payment</span>
+        <span className="font-semibold">5% off on bank transfer</span>
       </div>
       <header className="sticky top-0 z-50 bg-white border-b border-stone-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

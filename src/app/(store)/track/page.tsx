@@ -31,7 +31,11 @@ function TrackContent() {
     }
   }
 
-  const statusSteps = ["pending", "confirmed", "shipped", "delivered"];
+  const statusSteps =
+    order?.paymentMethod === "online"
+      ? ["pending", "paid", "confirmed", "shipped", "delivered"]
+      : ["pending", "confirmed", "shipped", "delivered"];
+  const isCancelled = order?.orderStatus === "cancelled";
   const currentStep = order ? statusSteps.indexOf(order.orderStatus) : -1;
 
   return (
@@ -62,18 +66,24 @@ function TrackContent() {
             <p className="text-lg font-semibold">{order.orderNumber}</p>
           </div>
 
-          <div className="flex justify-between text-sm">
-            {statusSteps.map((step, i) => (
-              <div key={step} className="flex flex-col items-center flex-1">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium mb-2 ${i <= currentStep ? "bg-rose-600 text-white" : "bg-stone-200 text-stone-500"}`}>
-                  {i + 1}
+          {isCancelled ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 text-center">
+              This order has been cancelled. Contact us if you need help.
+            </div>
+          ) : (
+            <div className="flex justify-between text-sm">
+              {statusSteps.map((step, i) => (
+                <div key={step} className="flex flex-col items-center flex-1">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium mb-2 ${i <= currentStep ? "bg-rose-600 text-white" : "bg-stone-200 text-stone-500"}`}>
+                    {i + 1}
+                  </div>
+                  <span className={`text-xs capitalize text-center ${i <= currentStep ? "text-stone-900 font-medium" : "text-stone-400"}`}>
+                    {step}
+                  </span>
                 </div>
-                <span className={`text-xs capitalize text-center ${i <= currentStep ? "text-stone-900 font-medium" : "text-stone-400"}`}>
-                  {step}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="text-sm space-y-2 pt-4 border-t border-stone-100">
             <div className="flex justify-between">

@@ -290,14 +290,50 @@ export async function dbAddOrder(order: Order) {
 
 export async function dbUpdateOrder(id: string, updates: Partial<Order>) {
   const sql = getSql();
-  const rows = (await sql`
+
+  const existingRows = (await sql`SELECT * FROM orders WHERE id = ${id} LIMIT 1`) as DbOrder[];
+  const existing = existingRows[0];
+  if (!existing) throw new Error("Order not found");
+
+  const nextStatus = updates.orderStatus ?? existing.order_status;
+  const wasCancelled = existing.order_status === "cancelled";
+  const willBeCancelled = nextStatus === "cancelled";
+
+  const updateOrderStmt = sql`
     UPDATE orders SET
       payment_status = COALESCE(${updates.paymentStatus ?? null}, payment_status),
       order_status = COALESCE(${updates.orderStatus ?? null}, order_status),
       payment_screenshot = COALESCE(${updates.paymentScreenshot ?? null}, payment_screenshot)
     WHERE id = ${id}
     RETURNING *
-  `) as DbOrder[];
+  `;
+
+  // Reconcile stock when an order is cancelled (restore) or un-cancelled (re-decrement).
+  let stockStmts: ReturnType<typeof sql>[] = [];
+  if (!wasCancelled && willBeCancelled) {
+    stockStmts = existing.items.map(
+      (item) => sql`
+        UPDATE products SET stock = stock + ${item.quantity}
+        WHERE id = ${item.productId}
+      `
+    );
+  } else if (wasCancelled && !willBeCancelled) {
+    stockStmts = existing.items.map(
+      (item) => sql`
+        UPDATE products SET stock = GREATEST(stock - ${item.quantity}, 0)
+        WHERE id = ${item.productId}
+      `
+    );
+  }
+
+  if (stockStmts.length > 0) {
+    const results = await sql.transaction([updateOrderStmt, ...stockStmts]);
+    const rows = results[0] as DbOrder[];
+    if (!rows[0]) throw new Error("Order not found");
+    return mapOrder(rows[0]);
+  }
+
+  const rows = (await updateOrderStmt) as DbOrder[];
   if (!rows[0]) throw new Error("Order not found");
   return mapOrder(rows[0]);
 }

@@ -7,7 +7,8 @@ import Image from "next/image";
 import { formatPrice } from "@/lib/format";
 import { Order } from "@/lib/types";
 import { PaymentAccountDetails } from "@/lib/payment-details";
-import { Upload, Building2, Smartphone } from "lucide-react";
+import { Upload, Building2, Smartphone, MessageCircle } from "lucide-react";
+import { SITE, getWhatsAppUrl } from "@/lib/site-config";
 
 function PaymentContent() {
   const router = useRouter();
@@ -103,7 +104,7 @@ function PaymentContent() {
       </p>
       {order.discount > 0 && (
         <p className="text-xs text-rose-600 mb-6">
-          {order.discountPercent}% advance payment discount applied.
+          {order.discountPercent}% bank transfer discount applied.
         </p>
       )}
 
@@ -164,6 +165,19 @@ function PaymentContent() {
         >
           {loading ? "Submitting..." : "Submit payment & confirm order"}
         </button>
+
+        <p className="text-xs text-stone-500 text-center pt-2">
+          Need help?{" "}
+          <a
+            href={getWhatsAppUrl(`Hi, I need help with order ${order.orderNumber}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[#128C7E] hover:underline"
+          >
+            <MessageCircle size={14} />
+            WhatsApp {SITE.phone}
+          </a>
+        </p>
       </form>
     </main>
   );

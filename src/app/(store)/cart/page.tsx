@@ -89,7 +89,7 @@ export default function CartPage() {
               </p>
             )}
             <p className="text-xs text-stone-400 mt-2 mb-6">
-              Shipping Rs. 200 · 5% off on advance payment
+              Shipping Rs. 200 · 5% off on bank transfer
             </p>
             {belowMinimum ? (
               <button disabled className="w-full bg-stone-200 text-stone-400 py-3.5 text-sm font-medium cursor-not-allowed">

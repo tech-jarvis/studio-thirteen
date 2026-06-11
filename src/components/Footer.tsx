@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { SITE, getWhatsAppUrl } from "@/lib/site-config";
 
 export default function Footer() {
   return (
@@ -60,17 +61,33 @@ export default function Footer() {
               Contact
             </p>
             <ul className="space-y-2 text-sm text-stone-400">
-              <li>hello@studiothirteen.pk</li>
-              <li>WhatsApp: 0300-0000000</li>
-              <li>Lahore, Pakistan</li>
-              <li>Mon–Sat, 10am–7pm</li>
+              <li>
+                <a
+                  href={`mailto:${SITE.email}`}
+                  className="hover:text-white transition-colors"
+                >
+                  {SITE.email}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={getWhatsAppUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  WhatsApp: {SITE.phone}
+                </a>
+              </li>
+              <li>{SITE.address}</li>
+              <li>{SITE.hours}</li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-stone-700 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-stone-500">
-          <p>© {new Date().getFullYear()} Studio Thirteen. All rights reserved.</p>
-          <p>Prices in PKR · 5% discount on advance payment</p>
+          <p>© {new Date().getFullYear()} {SITE.businessName}. All rights reserved.</p>
+          <p>Prices in PKR · 5% off on bank transfer</p>
         </div>
       </div>
     </footer>
