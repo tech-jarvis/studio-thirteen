@@ -2,14 +2,23 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/format";
 import { MIN_ORDER_AMOUNT } from "@/lib/pricing";
-import { Minus, Plus, Trash2 } from "lucide-react";
 
 export default function CartPage() {
-  const { items, remove, updateQty, totalPrice, totalItems } = useCart();
+  const router = useRouter();
+  const { items, remove, updateQty, totalPrice, totalItems, hydrated } = useCart();
   const belowMinimum = totalPrice < MIN_ORDER_AMOUNT;
+
+  if (!hydrated) {
+    return (
+      <main className="max-w-7xl mx-auto px-4 py-20 text-center text-stone-400">
+        Loading cart...
+      </main>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -47,19 +56,15 @@ export default function CartPage() {
                   <Link href={`/product/${item.productId}`} className="text-sm font-medium text-stone-900 hover:text-rose-700 transition-colors">
                     {item.name}
                   </Link>
-                  <button onClick={() => remove(item.productId)} className="text-stone-300 hover:text-red-500 transition-colors" aria-label="Remove item">
-                    <Trash2 size={16} />
+                  <button type="button" onClick={() => remove(item.productId)} className="text-stone-300 hover:text-red-500 transition-colors" aria-label="Remove item">
+                    ✕
                   </button>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
                   <div className="flex items-center border border-stone-200">
-                    <button onClick={() => updateQty(item.productId, item.quantity - 1)} className="px-3 py-1.5 text-stone-600 hover:bg-stone-50" aria-label="Decrease">
-                      <Minus size={14} />
-                    </button>
+                    <button type="button" onClick={() => updateQty(item.productId, item.quantity - 1)} className="px-3 py-1.5 text-stone-600 hover:bg-stone-50" aria-label="Decrease">−</button>
                     <span className="px-3 py-1.5 text-sm min-w-[2rem] text-center">{item.quantity}</span>
-                    <button onClick={() => updateQty(item.productId, item.quantity + 1)} className="px-3 py-1.5 text-stone-600 hover:bg-stone-50" aria-label="Increase">
-                      <Plus size={14} />
-                    </button>
+                    <button type="button" onClick={() => updateQty(item.productId, item.quantity + 1)} className="px-3 py-1.5 text-stone-600 hover:bg-stone-50" aria-label="Increase">+</button>
                   </div>
                   <p className="text-sm font-semibold">{formatPrice(item.price * item.quantity)}</p>
                 </div>
@@ -91,15 +96,14 @@ export default function CartPage() {
             <p className="text-xs text-stone-400 mt-2 mb-6">
               Shipping Rs. 200 · 5% off on bank transfer
             </p>
-            {belowMinimum ? (
-              <button disabled className="w-full bg-stone-200 text-stone-400 py-3.5 text-sm font-medium cursor-not-allowed">
-                Proceed to Checkout
-              </button>
-            ) : (
-              <Link href="/checkout" className="block w-full bg-stone-900 text-white py-3.5 text-sm font-medium hover:bg-rose-600 transition-colors tracking-wide text-center">
-                Proceed to Checkout
-              </Link>
-            )}
+            <button
+              type="button"
+              disabled={belowMinimum}
+              onClick={() => router.push("/checkout")}
+              className="w-full bg-stone-900 text-white py-3.5 text-sm font-medium hover:bg-rose-600 transition-colors tracking-wide disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed"
+            >
+              Proceed to Checkout
+            </button>
             <Link href="/shop" className="block text-center text-sm text-stone-500 hover:text-stone-900 mt-4">
               ← Continue Shopping
             </Link>

@@ -4,16 +4,16 @@ import { getProducts } from "@/lib/store";
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const page = Number(params.get("page") ?? "1");
-  const pageSize = Number(params.get("pageSize") ?? "24");
+  const pageSize = Number(params.get("pageSize") ?? "48");
   const search = params.get("search") ?? undefined;
 
   try {
     const result = await getProducts(
       {
         categorySlug: params.get("category") ?? undefined,
-        featured: params.get("featured") === "true",
-        isNew: params.get("new") === "true",
-        isLatest: params.get("latest") === "true",
+        featured: params.get("featured") === "true" ? true : undefined,
+        isNew: params.get("new") === "true" ? true : undefined,
+        isLatest: params.get("latest") === "true" ? true : undefined,
         tag: params.get("tag") ?? undefined,
         search,
       },

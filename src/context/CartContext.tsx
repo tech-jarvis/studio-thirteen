@@ -5,6 +5,7 @@ import {
   useContext,
   useReducer,
   useEffect,
+  useState,
   ReactNode,
 } from "react";
 import { CartItem } from "@/lib/types";
@@ -67,6 +68,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 
 interface CartContextType {
   items: CartItem[];
+  hydrated: boolean;
   add: (item: Omit<CartItem, "quantity">) => void;
   remove: (productId: string) => void;
   updateQty: (productId: string, quantity: number) => void;
@@ -79,6 +81,7 @@ const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { items: [] });
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("st_cart");
@@ -89,11 +92,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         // ignore malformed
       }
     }
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
+    if (!hydrated) return;
     localStorage.setItem("st_cart", JSON.stringify(state.items));
-  }, [state.items]);
+  }, [state.items, hydrated]);
 
   const totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = state.items.reduce(
@@ -105,6 +110,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider
       value={{
         items: state.items,
+        hydrated,
         add: (item) => dispatch({ type: "ADD", item }),
         remove: (productId) => dispatch({ type: "REMOVE", productId }),
         updateQty: (productId, quantity) =>

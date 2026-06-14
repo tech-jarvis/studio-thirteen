@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import Logo from "@/components/Logo";
+import { SITE } from "@/lib/site-config";
 
 const seasonLinks = [
   { href: "/shop?category=summer-lawn", label: "Summer Lawn" },
@@ -32,7 +33,7 @@ export default function Navbar() {
   return (
     <>
       <div className="bg-rose-700 text-white text-center text-xs py-2 px-4 tracking-wide">
-        Minimum order Rs. 1,000 · Delivery 3–5 days ·{" "}
+        Minimum order Rs. 1,000 · Delivery {SITE.deliveryDays} ·{" "}
         <span className="font-semibold">5% off on bank transfer</span>
       </div>
       <header className="sticky top-0 z-50 bg-white border-b border-stone-100">

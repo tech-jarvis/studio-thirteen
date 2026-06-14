@@ -72,15 +72,22 @@ export async function dbGetProducts(
 
   const search = filters?.search?.trim() || null;
   const saleOnly = filters?.tag === "sale";
+  const tagFilter =
+    filters?.tag && filters.tag !== "sale" ? filters.tag : null;
+
+  const featuredOnly = filters?.featured === true ? true : null;
+  const newOnly = filters?.isNew === true ? true : null;
+  const latestOnly = filters?.isLatest === true ? true : null;
 
   const countRows = (await sql`
     SELECT COUNT(*)::int AS count FROM products p
     WHERE (${activeOnly} = false OR p.active = true)
       AND (${categoryId ?? null}::text IS NULL OR ${categoryId ?? null} = ANY(p.category_ids))
-      AND (${filters?.featured ?? null}::boolean IS NULL OR p.featured = ${filters?.featured ?? false})
-      AND (${filters?.isNew ?? null}::boolean IS NULL OR p.is_new = ${filters?.isNew ?? false})
-      AND (${filters?.isLatest ?? null}::boolean IS NULL OR p.is_latest = ${filters?.isLatest ?? false})
-      AND (${saleOnly} = false OR (p.original_price IS NOT NULL AND p.original_price > p.price))
+      AND (${featuredOnly}::boolean IS NULL OR p.featured = ${featuredOnly})
+      AND (${newOnly}::boolean IS NULL OR p.is_new = ${newOnly})
+      AND (${latestOnly}::boolean IS NULL OR p.is_latest = ${latestOnly})
+      AND (${saleOnly} = false OR (p.original_price IS NOT NULL AND p.original_price > p.price) OR 'sale' = ANY(p.tags))
+      AND (${tagFilter}::text IS NULL OR ${tagFilter} = ANY(p.tags))
       AND (${search}::text IS NULL OR p.name ILIKE ${search ? `%${search}%` : null} OR p.brand ILIKE ${search ? `%${search}%` : null})
   `) as { count: number }[];
   const total = countRows[0]?.count ?? 0;
@@ -89,10 +96,11 @@ export async function dbGetProducts(
     SELECT p.* FROM products p
     WHERE (${activeOnly} = false OR p.active = true)
       AND (${categoryId ?? null}::text IS NULL OR ${categoryId ?? null} = ANY(p.category_ids))
-      AND (${filters?.featured ?? null}::boolean IS NULL OR p.featured = ${filters?.featured ?? false})
-      AND (${filters?.isNew ?? null}::boolean IS NULL OR p.is_new = ${filters?.isNew ?? false})
-      AND (${filters?.isLatest ?? null}::boolean IS NULL OR p.is_latest = ${filters?.isLatest ?? false})
-      AND (${saleOnly} = false OR (p.original_price IS NOT NULL AND p.original_price > p.price))
+      AND (${featuredOnly}::boolean IS NULL OR p.featured = ${featuredOnly})
+      AND (${newOnly}::boolean IS NULL OR p.is_new = ${newOnly})
+      AND (${latestOnly}::boolean IS NULL OR p.is_latest = ${latestOnly})
+      AND (${saleOnly} = false OR (p.original_price IS NOT NULL AND p.original_price > p.price) OR 'sale' = ANY(p.tags))
+      AND (${tagFilter}::text IS NULL OR ${tagFilter} = ANY(p.tags))
       AND (${search}::text IS NULL OR p.name ILIKE ${search ? `%${search}%` : null} OR p.brand ILIKE ${search ? `%${search}%` : null})
     ORDER BY p.created_at DESC
     LIMIT ${pageSize} OFFSET ${offset}
@@ -210,11 +218,11 @@ export async function dbAddProduct(product: Product) {
   const rows = (await sql`
     INSERT INTO products (
       id, name, description, price, original_price, images, category_ids,
-      brand, stock, featured, is_new, is_latest, tags
+      brand, stock, featured, is_new, is_latest, tags, active
     ) VALUES (
       ${product.id}, ${db.name}, ${db.description}, ${db.price}, ${db.original_price},
       ${db.images}, ${db.category_ids}, ${db.brand}, ${db.stock},
-      ${db.featured}, ${db.is_new}, ${db.is_latest}, ${db.tags}
+      ${db.featured}, ${db.is_new}, ${db.is_latest}, ${db.tags}, true
     ) RETURNING *
   `) as DbProduct[];
   return mapProduct(rows[0]);

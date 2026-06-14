@@ -69,6 +69,10 @@ export default function AdminProductsPage() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (form.categoryIds.length === 0) {
+      alert("Please select at least one category so the product appears in the shop.");
+      return;
+    }
     setLoading(true);
     await fetch("/api/admin/products", {
       method: "POST",
@@ -167,6 +171,7 @@ export default function AdminProductsPage() {
           <thead>
             <tr className="border-b border-stone-100 text-left text-stone-500">
               <th className="px-4 py-3">Product</th>
+              <th className="px-4 py-3">Categories</th>
               <th className="px-4 py-3">Price</th>
               <th className="px-4 py-3">Stock</th>
               <th className="px-4 py-3">Flags</th>
@@ -179,6 +184,15 @@ export default function AdminProductsPage() {
                 <td className="px-4 py-3">
                   <p className="font-medium">{p.name}</p>
                   <p className="text-xs text-stone-400">{p.brand}</p>
+                </td>
+                <td className="px-4 py-3 text-xs text-stone-500">
+                  {p.categoryIds.length === 0 ? (
+                    <span className="text-amber-600">None assigned</span>
+                  ) : (
+                    p.categoryIds
+                      .map((id) => categories.find((c) => c.id === id)?.name ?? id)
+                      .join(", ")
+                  )}
                 </td>
                 <td className="px-4 py-3">{formatPrice(p.price)}</td>
                 <td className="px-4 py-3">{p.stock}</td>

@@ -7,7 +7,7 @@ import { Product } from "@/lib/types";
 import { Suspense } from "react";
 
 const SORT_OPTIONS = [
-  { value: "default", label: "Featured" },
+  { value: "default", label: "Newest" },
   { value: "price-asc", label: "Price: Low to High" },
   { value: "price-desc", label: "Price: High to Low" },
   { value: "discount", label: "Biggest Discount" },
@@ -32,12 +32,20 @@ function ShopContent() {
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState("");
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const fetchProducts = useCallback(
     async (page: number, append = false) => {
-      const params = new URLSearchParams({ page: String(page), pageSize: "24" });
+      const params = new URLSearchParams({ page: String(page), pageSize: "48" });
       if (category) params.set("category", category);
       if (tag) params.set("tag", tag);
       if (latest) params.set("latest", "true");
@@ -46,12 +54,22 @@ function ShopContent() {
 
       if (append) setLoadingMore(true);
       else setLoading(true);
+      setError("");
 
       try {
         const res = await fetch(`/api/products?${params}`);
-        const data: ProductPage = await res.json();
-        setProducts((prev) => (append ? [...prev, ...data.items] : data.items));
-        setMeta({ total: data.total, page: data.page, totalPages: data.totalPages });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load products");
+        const items = Array.isArray(data.items) ? data.items : [];
+        setProducts((prev) => (append ? [...prev, ...items] : items));
+        setMeta({
+          total: data.total ?? items.length,
+          page: data.page ?? page,
+          totalPages: data.totalPages ?? 1,
+        });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load products");
+        if (!append) setProducts([]);
       } finally {
         setLoading(false);
         setLoadingMore(false);
@@ -107,8 +125,8 @@ function ShopContent() {
         <input
           type="search"
           placeholder="Search products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className="border border-stone-200 px-3 py-2 text-sm w-full sm:w-64 focus:outline-none focus:border-stone-400"
         />
       </div>
@@ -124,6 +142,10 @@ function ShopContent() {
           ))}
         </select>
       </div>
+
+      {error && (
+        <p className="text-center text-red-500 text-sm mb-6">{error}</p>
+      )}
 
       {loading ? (
         <p className="text-center py-24 text-stone-400">Loading products...</p>
@@ -142,7 +164,7 @@ function ShopContent() {
                 disabled={loadingMore}
                 className="px-8 py-3 border border-stone-900 text-sm font-medium hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-50"
               >
-                {loadingMore ? "Loading..." : "Load More"}
+                {loadingMore ? "Loading..." : `Load More (${products.length} of ${meta.total})`}
               </button>
             </div>
           )}

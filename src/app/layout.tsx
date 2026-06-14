@@ -11,7 +11,7 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "Studio Thirteen — Premium Branded Fashion",
   description:
-    "Shop branded lawn, embroidered 2pc & 3pc suits, patches, and more. Cash on delivery and online payment with 5% advance discount.",
+    "Shop branded lawn, embroidered 2pc & 3pc suits, patches, and more. Cash on delivery or bank transfer with 5% off.",
 };
 
 export default function RootLayout({

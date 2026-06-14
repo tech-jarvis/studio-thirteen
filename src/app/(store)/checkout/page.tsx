@@ -15,7 +15,7 @@ import { CreditCard, Banknote } from "lucide-react";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, totalPrice, clear } = useCart();
+  const { items, totalPrice, clear, hydrated } = useCart();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cod");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +30,14 @@ export default function CheckoutPage() {
   });
 
   const totals = calculateOrderTotals(totalPrice, paymentMethod);
+
+  if (!hydrated) {
+    return (
+      <main className="max-w-xl mx-auto px-4 py-20 text-center text-stone-400">
+        Loading checkout...
+      </main>
+    );
+  }
 
   if (items.length === 0) {
     return (

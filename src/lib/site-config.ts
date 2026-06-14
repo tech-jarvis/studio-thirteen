@@ -7,6 +7,7 @@ export const SITE = {
   address:
     "435A Nasheman e Iqbal, Corporate Housing Society Phase 1, Lahore",
   hours: "Mon–Sat, 10am–7pm",
+  deliveryDays: "5–7 working days",
 } as const;
 
 export const DEFAULT_PAYMENT = {
