@@ -1,5 +1,5 @@
 export const MIN_ORDER_AMOUNT = 1000;
-export const SHIPPING_FEE = 200;
+export const SHIPPING_FEE = 300;
 export const ONLINE_DISCOUNT_PERCENT = 5;
 
 export function calculateOrderTotals(

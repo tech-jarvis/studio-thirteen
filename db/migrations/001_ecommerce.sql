@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS orders (
   notes TEXT,
   items JSONB NOT NULL DEFAULT '[]',
   subtotal INTEGER NOT NULL CHECK (subtotal >= 0),
-  shipping INTEGER NOT NULL DEFAULT 200 CHECK (shipping >= 0),
+  shipping INTEGER NOT NULL DEFAULT 300 CHECK (shipping >= 0),
   discount INTEGER NOT NULL DEFAULT 0 CHECK (discount >= 0),
   discount_percent INTEGER NOT NULL DEFAULT 0 CHECK (discount_percent >= 0 AND discount_percent <= 100),
   total INTEGER NOT NULL CHECK (total >= 0),

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { SITE } from "@/lib/site-config";
+import { formatPrice } from "@/lib/format";
+import { SHIPPING_FEE } from "@/lib/pricing";
 
 export default function ShippingPage() {
   return (
@@ -18,7 +20,7 @@ export default function ShippingPage() {
         <section>
           <h2 className="text-lg font-semibold text-stone-900 mb-2">Shipping Fee</h2>
           <p>
-            A flat shipping fee of <strong>Rs. 200</strong> applies to all orders. This is added
+            A flat shipping fee of <strong>{formatPrice(SHIPPING_FEE)}</strong> applies to all orders. This is added
             at checkout.
           </p>
         </section>

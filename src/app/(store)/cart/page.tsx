@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { formatPrice } from "@/lib/format";
-import { MIN_ORDER_AMOUNT } from "@/lib/pricing";
+import { MIN_ORDER_AMOUNT, SHIPPING_FEE, ONLINE_DISCOUNT_PERCENT } from "@/lib/pricing";
 
 export default function CartPage() {
   const router = useRouter();
@@ -94,7 +94,7 @@ export default function CartPage() {
               </p>
             )}
             <p className="text-xs text-stone-400 mt-2 mb-6">
-              Shipping Rs. 200 · 5% off on bank transfer
+              Shipping {formatPrice(SHIPPING_FEE)} · {ONLINE_DISCOUNT_PERCENT}% off on bank transfer
             </p>
             <button
               type="button"
