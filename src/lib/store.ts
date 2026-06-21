@@ -33,14 +33,9 @@ export async function getProductsByIds(ids: string[]) {
   return neon.dbGetProductsByIds(ids);
 }
 
-export async function getOrders(pagination?: Pagination) {
+export async function getOrders() {
   if (!isNeonConfigured()) throw new Error("Database not configured");
   return neon.dbGetAllOrders();
-}
-
-export async function getOrdersPaginated(pagination?: Pagination) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetOrders(pagination);
 }
 
 export async function getOrderById(id: string) {
@@ -91,10 +86,6 @@ export async function attachOrderPaymentProof(id: string, paymentScreenshot: str
 
 export async function listAllProductsAdmin() {
   return neon.dbListAllProducts();
-}
-
-export function getStorageBackend() {
-  return isNeonConfigured() ? "neon" : "none";
 }
 
 export async function healthCheck() {

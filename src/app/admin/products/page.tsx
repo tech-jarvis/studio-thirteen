@@ -23,17 +23,14 @@ export default function AdminProductsPage() {
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [storageBackend, setStorageBackend] = useState<string>("local-json");
 
   function load() {
     Promise.all([
       fetch("/api/admin/products").then((r) => r.json()),
       fetch("/api/admin/categories").then((r) => r.json()),
-      fetch("/api/storage/status").then((r) => r.json()),
-    ]).then(([prods, cats, status]) => {
+    ]).then(([prods, cats]) => {
       setProducts(prods);
       setCategories(cats);
-      setStorageBackend(status.backend ?? "local-json");
     });
   }
 
@@ -115,7 +112,7 @@ export default function AdminProductsPage() {
       <p className="text-sm text-stone-500 mb-8">
         Data: <span className="font-medium">Neon Postgres</span>
         {" · "}
-        Images: <span className="font-medium">Local uploads</span>
+        Images: <span className="font-medium">Neon Postgres</span>
       </p>
 
       <form onSubmit={handleAdd} className="bg-white border border-stone-200 p-6 mb-8 space-y-4">

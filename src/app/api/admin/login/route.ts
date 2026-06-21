@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_COOKIE, getAdministrationPassword } from "@/lib/admin-auth";
+import {
+  ADMIN_COOKIE,
+  createSessionToken,
+  verifyPassword,
+} from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
+  const token = createSessionToken();
+  if (!token) {
+    return NextResponse.json(
+      { error: "Admin login is not configured" },
+      { status: 500 }
+    );
+  }
+
   const { password } = await request.json();
 
-  if (password !== getAdministrationPassword()) {
+  if (!verifyPassword(password)) {
     return NextResponse.json({ error: "Invalid password" }, { status: 401 });
   }
 
@@ -20,7 +32,7 @@ export async function POST(request: NextRequest) {
   if (cookieDomain) {
     cookieOptions.domain = cookieDomain;
   }
-  response.cookies.set(ADMIN_COOKIE, getAdministrationPassword(), cookieOptions);
+  response.cookies.set(ADMIN_COOKIE, token, cookieOptions);
   return response;
 }
 

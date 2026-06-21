@@ -14,12 +14,36 @@ function OrderContent({ id }: { id: string }) {
   const submitted = searchParams.get("submitted") === "1";
   const confirmed = searchParams.get("confirmed") === "1";
   const [order, setOrder] = useState<Order | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/orders/${id}`)
-      .then((r) => r.json())
-      .then(setOrder);
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/orders/${id}`);
+        if (!active) return;
+        if (!res.ok) {
+          setNotFound(true);
+          return;
+        }
+        setOrder(await res.json());
+      } catch {
+        if (active) setNotFound(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [id]);
+
+  if (notFound) {
+    return (
+      <main className="max-w-xl mx-auto px-4 py-20 text-center">
+        <p className="text-stone-500 mb-4">We couldn&apos;t find that order.</p>
+        <Link href="/shop" className="text-rose-600 hover:underline">Continue shopping</Link>
+      </main>
+    );
+  }
 
   if (!order) {
     return (

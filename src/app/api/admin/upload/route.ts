@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { uploadProductImageLocal } from "@/lib/storage/local";
+import { saveUpload, UploadError } from "@/lib/storage/uploads";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   const authed = await isAdminAuthenticated();
@@ -16,17 +18,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "File must be an image" }, { status: 400 });
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "Max file size is 5MB" }, { status: 400 });
-    }
-
-    const result = await uploadProductImageLocal(file);
-    return NextResponse.json({ ...result, backend: "local" });
+    const result = await saveUpload(file, "product");
+    return NextResponse.json({ ...result, backend: "db" });
   } catch (err) {
+    if (err instanceof UploadError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
     const message = err instanceof Error ? err.message : "Upload failed";
     return NextResponse.json({ error: message }, { status: 500 });
   }

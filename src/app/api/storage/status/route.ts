@@ -11,7 +11,7 @@ export async function GET() {
     ok: db.database,
     backend: data,
     storage,
-    storageLabel: "Local disk (public/uploads/products)",
+    storageLabel: "Neon Postgres (uploads table)",
     dataLabel: data === "neon" ? "Neon Postgres" : "Not configured",
   });
 }

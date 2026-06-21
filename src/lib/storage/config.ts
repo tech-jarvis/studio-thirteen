@@ -1,9 +1,9 @@
 import { isNeonConfigured } from "@/lib/db/neon";
 
-export type StorageBackend = "local";
+export type StorageBackend = "db";
 
 export function getStorageBackend(): StorageBackend {
-  return "local";
+  return "db";
 }
 
 export function getDataBackend(): "neon" | "none" {

@@ -37,7 +37,26 @@ export async function GET(request: NextRequest) {
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
-    return NextResponse.json(order);
+    // Order numbers are guessable, so this public lookup omits customer PII
+    // (name, phone, address, email, notes). The full order is only available
+    // via the unguessable /api/orders/[id] link the customer receives.
+    return NextResponse.json({
+      orderNumber: order.orderNumber,
+      orderStatus: order.orderStatus,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      subtotal: order.subtotal,
+      shipping: order.shipping,
+      discount: order.discount,
+      discountPercent: order.discountPercent,
+      total: order.total,
+      items: order.items.map((i) => ({
+        productName: i.productName,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      createdAt: order.createdAt,
+    });
   } catch {
     return NextResponse.json({ error: "Failed to fetch order" }, { status: 500 });
   }

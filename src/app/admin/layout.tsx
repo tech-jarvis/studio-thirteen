@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import Link from "next/link";
 import { Package, FolderOpen, ShoppingCart } from "lucide-react";

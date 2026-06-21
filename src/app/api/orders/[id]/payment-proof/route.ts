@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { attachOrderPaymentProof, getOrderById } from "@/lib/store";
-import { uploadPaymentProofLocal } from "@/lib/storage/local";
+import { saveUpload, UploadError } from "@/lib/storage/uploads";
+
+export const runtime = "nodejs";
 
 export async function POST(
   request: NextRequest,
@@ -27,19 +29,14 @@ export async function POST(
       return NextResponse.json({ error: "Screenshot is required" }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "File must be an image" }, { status: 400 });
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "Max file size is 5MB" }, { status: 400 });
-    }
-
-    const { url } = await uploadPaymentProofLocal(file);
+    const { url } = await saveUpload(file, "payment");
     const updated = await attachOrderPaymentProof(id, url);
 
     return NextResponse.json(updated);
   } catch (e) {
+    if (e instanceof UploadError) {
+      return NextResponse.json({ error: e.message }, { status: 400 });
+    }
     const message = e instanceof Error ? e.message : "Upload failed";
     return NextResponse.json({ error: message }, { status: 500 });
   }

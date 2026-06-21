@@ -20,18 +20,34 @@ function PaymentContent() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
-    fetch(`/api/orders/${orderId}`)
-      .then((r) => r.json())
-      .then(setOrder);
-    fetch("/api/payment/details")
-      .then((r) => r.json())
-      .then(setAccounts);
+    let active = true;
+    (async () => {
+      try {
+        const [orderRes, accountsRes] = await Promise.all([
+          fetch(`/api/orders/${orderId}`),
+          fetch("/api/payment/details"),
+        ]);
+        if (!active) return;
+        if (!orderRes.ok) {
+          setNotFound(true);
+          return;
+        }
+        setOrder(await orderRes.json());
+        if (accountsRes.ok) setAccounts(await accountsRes.json());
+      } catch {
+        if (active) setNotFound(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [orderId]);
 
-  if (!orderId) {
+  if (!orderId || notFound) {
     return (
       <main className="max-w-xl mx-auto px-4 py-20 text-center">
         <p className="text-stone-500">Invalid payment session.</p>

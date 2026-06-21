@@ -48,7 +48,6 @@ export default function AdminLoginPage() {
         <button type="submit" disabled={loading} className="w-full bg-stone-900 text-white py-2.5 text-sm font-medium hover:bg-rose-600 transition-colors disabled:opacity-50">
           {loading ? "Signing in..." : "Sign In"}
         </button>
-        <p className="text-xs text-stone-400 mt-4">Default password: admin123</p>
       </form>
     </main>
   );
