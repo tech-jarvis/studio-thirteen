@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { Product } from "@/lib/types";
@@ -21,6 +21,32 @@ type ProductPage = {
   totalPages: number;
 };
 
+type Results = {
+  /** Which filters these results belong to. */
+  key: string;
+  products: Product[];
+  meta: { total: number; page: number; totalPages: number };
+  error: string;
+};
+
+async function fetchProductPage(filters: string, page: number) {
+  const params = new URLSearchParams(filters);
+  params.set("page", String(page));
+  params.set("pageSize", "48");
+  const res = await fetch(`/api/products?${params}`);
+  const data = (await res.json()) as Partial<ProductPage> & { error?: string };
+  if (!res.ok) throw new Error(data.error || "Failed to load products");
+  const items = Array.isArray(data.items) ? data.items : [];
+  return {
+    items,
+    meta: {
+      total: data.total ?? items.length,
+      page: data.page ?? page,
+      totalPages: data.totalPages ?? 1,
+    },
+  };
+}
+
 function ShopContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") ?? "";
@@ -28,14 +54,10 @@ function ShopContent() {
   const latest = searchParams.get("latest") === "true";
   const isNew = searchParams.get("new") === "true";
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 0 });
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
   const [sort, setSort] = useState("default");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -43,44 +65,65 @@ function ShopContent() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const fetchProducts = useCallback(
-    async (page: number, append = false) => {
-      const params = new URLSearchParams({ page: String(page), pageSize: "48" });
-      if (category) params.set("category", category);
-      if (tag) params.set("tag", tag);
-      if (latest) params.set("latest", "true");
-      if (isNew) params.set("new", "true");
-      if (search.trim()) params.set("search", search.trim());
+  // Query string for the current filters; doubles as the results key.
+  const filters = useMemo(() => {
+    const params = new URLSearchParams();
+    if (category) params.set("category", category);
+    if (tag) params.set("tag", tag);
+    if (latest) params.set("latest", "true");
+    if (isNew) params.set("new", "true");
+    if (search.trim()) params.set("search", search.trim());
+    return params.toString();
+  }, [category, tag, latest, isNew, search]);
 
-      if (append) setLoadingMore(true);
-      else setLoading(true);
-      setError("");
-
-      try {
-        const res = await fetch(`/api/products?${params}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to load products");
-        const items = Array.isArray(data.items) ? data.items : [];
-        setProducts((prev) => (append ? [...prev, ...items] : items));
-        setMeta({
-          total: data.total ?? items.length,
-          page: data.page ?? page,
-          totalPages: data.totalPages ?? 1,
-        });
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load products");
-        if (!append) setProducts([]);
-      } finally {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    },
-    [category, tag, latest, isNew, search]
-  );
+  const [results, setResults] = useState<Results | null>(null);
+  // Results for older filters are hidden until the new ones arrive.
+  const current = results?.key === filters ? results : null;
+  const loading = current === null;
+  const products = useMemo(() => current?.products ?? [], [current]);
+  const meta = current?.meta ?? { total: 0, page: 1, totalPages: 0 };
+  const error = current?.error ?? "";
 
   useEffect(() => {
-    fetchProducts(1);
-  }, [fetchProducts]);
+    let cancelled = false;
+    fetchProductPage(filters, 1)
+      .then(({ items, meta }) => {
+        if (!cancelled) setResults({ key: filters, products: items, meta, error: "" });
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setResults({
+          key: filters,
+          products: [],
+          meta: { total: 0, page: 1, totalPages: 0 },
+          error: e instanceof Error ? e.message : "Failed to load products",
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filters]);
+
+  async function loadMore() {
+    if (!current) return;
+    setLoadingMore(true);
+    try {
+      const { items, meta: next } = await fetchProductPage(filters, current.meta.page + 1);
+      setResults((prev) =>
+        prev && prev.key === filters
+          ? { ...prev, products: [...prev.products, ...items], meta: next, error: "" }
+          : prev
+      );
+    } catch (e) {
+      setResults((prev) =>
+        prev && prev.key === filters
+          ? { ...prev, error: e instanceof Error ? e.message : "Failed to load products" }
+          : prev
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     const list = [...products];
@@ -160,7 +203,7 @@ function ShopContent() {
             <div className="text-center mt-12">
               <button
                 type="button"
-                onClick={() => fetchProducts(meta.page + 1, true)}
+                onClick={loadMore}
                 disabled={loadingMore}
                 className="px-8 py-3 border border-stone-900 text-sm font-medium hover:bg-stone-900 hover:text-white transition-colors disabled:opacity-50"
               >

@@ -1,9 +1,10 @@
 import { isDbConfigured } from "@/lib/db/client";
+import { isStorageConfigured } from "@/lib/storage/supabase";
 
-export type StorageBackend = "db";
+export type StorageBackend = "supabase" | "db";
 
 export function getStorageBackend(): StorageBackend {
-  return "db";
+  return isStorageConfigured() ? "supabase" : "db";
 }
 
 export function getDataBackend(): "postgres" | "none" {

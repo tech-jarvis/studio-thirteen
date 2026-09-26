@@ -1,0 +1,62 @@
+# Weekly database backup (Supabase's free plan has no automatic backups).
+#
+# Dumps the store's tables (orders, products, categories), encrypts the dump
+# with a passphrase, and keeps it as a workflow artifact for 90 days.
+# Product photos and payment screenshots live in Supabase Storage and are
+# not part of this dump.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   BACKUP_DATABASE_URL  Supabase session pooler URL (port 5432)
+#   BACKUP_PASSPHRASE    Long random passphrase; keep a copy somewhere safe
+#
+# Restore:
+#   gpg --decrypt studio-thirteen-<date>.sql.gz.gpg | gunzip | psql "<database url>"
+
+name: Database backup
+
+on:
+  schedule:
+    - cron: "0 21 * * 0" # Sundays 21:00 UTC (Monday 02:00 PKT)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump, compress, and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$DATABASE_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Set BACKUP_DATABASE_URL and BACKUP_PASSPHRASE repository secrets"
+            exit 1
+          fi
+          FILE="studio-thirteen-$(date -u +%Y-%m-%d).sql.gz.gpg"
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" \
+            --schema=public --no-owner --no-privileges \
+            | gzip -9 \
+            | gpg --batch --yes --symmetric --cipher-algo AES256 \
+                --passphrase "$BACKUP_PASSPHRASE" -o "$FILE"
+          echo "FILE=$FILE" >> "$GITHUB_ENV"
+          ls -lh "$FILE"
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 90
+          if-no-files-found: error

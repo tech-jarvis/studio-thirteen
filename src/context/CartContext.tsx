@@ -5,13 +5,14 @@ import {
   useContext,
   useReducer,
   useEffect,
-  useState,
   ReactNode,
 } from "react";
 import { CartItem } from "@/lib/types";
 
 interface CartState {
   items: CartItem[];
+  /** True once the saved cart has been read from localStorage. */
+  hydrated: boolean;
 }
 
 type CartAction =
@@ -24,13 +25,14 @@ type CartAction =
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "LOAD":
-      return { items: action.items };
+      return { items: action.items, hydrated: true };
     case "ADD": {
       const existing = state.items.find(
         (i) => i.productId === action.item.productId
       );
       if (existing) {
         return {
+          ...state,
           items: state.items.map((i) =>
             i.productId === action.item.productId
               ? { ...i, quantity: i.quantity + 1 }
@@ -39,20 +41,24 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         };
       }
       return {
+        ...state,
         items: [...state.items, { ...action.item, quantity: 1 }],
       };
     }
     case "REMOVE":
       return {
+        ...state,
         items: state.items.filter((i) => i.productId !== action.productId),
       };
     case "UPDATE_QTY":
       if (action.quantity < 1) {
         return {
+          ...state,
           items: state.items.filter((i) => i.productId !== action.productId),
         };
       }
       return {
+        ...state,
         items: state.items.map((i) =>
           i.productId === action.productId
             ? { ...i, quantity: action.quantity }
@@ -60,7 +66,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
         ),
       };
     case "CLEAR":
-      return { items: [] };
+      return { ...state, items: [] };
     default:
       return state;
   }
@@ -80,24 +86,28 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
-  const [hydrated, setHydrated] = useState(false);
+  const [state, dispatch] = useReducer(cartReducer, { items: [], hydrated: false });
+  const { hydrated } = state;
 
   useEffect(() => {
-    const saved = localStorage.getItem("st_cart");
-    if (saved) {
-      try {
-        dispatch({ type: "LOAD", items: JSON.parse(saved) });
-      } catch {
-        // ignore malformed
-      }
+    let items: CartItem[] = [];
+    try {
+      const saved = localStorage.getItem("st_cart");
+      const parsed = saved ? JSON.parse(saved) : [];
+      if (Array.isArray(parsed)) items = parsed;
+    } catch {
+      // ignore malformed or blocked storage
     }
-    setHydrated(true);
+    dispatch({ type: "LOAD", items });
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    localStorage.setItem("st_cart", JSON.stringify(state.items));
+    try {
+      localStorage.setItem("st_cart", JSON.stringify(state.items));
+    } catch {
+      // storage full or blocked — the cart still works for this visit
+    }
   }, [state.items, hydrated]);
 
   const totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);

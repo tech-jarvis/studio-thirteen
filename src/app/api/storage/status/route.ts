@@ -11,7 +11,7 @@ export async function GET() {
     ok: db.database,
     backend: data,
     storage,
-    storageLabel: "Supabase Postgres (uploads table)",
+    storageLabel: storage === "supabase" ? "Supabase Storage" : "Postgres (uploads table)",
     dataLabel: data === "postgres" ? "Supabase Postgres" : "Not configured",
   });
 }

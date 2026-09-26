@@ -1,31 +1,43 @@
 import { randomUUID } from "crypto";
 import { getSql } from "@/lib/db/client";
+import {
+  createSignedUrl,
+  getPublicUrl,
+  isStorageConfigured,
+  uploadObject,
+} from "@/lib/storage/supabase";
 
 export type UploadKind = "product" | "payment";
 
 /** Raster image types we accept. SVG is intentionally excluded — stored SVGs
  *  served from our own origin can carry executable script (stored XSS). */
-const ALLOWED_MIME = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-]);
+const ALLOWED_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+/** Prefix for payment proofs kept in the private Supabase bucket. */
+const PAYMENT_PREFIX = "payments/";
 
 export class UploadError extends Error {}
 
 /**
- * Persist an uploaded image in Postgres and return a URL that serves it back
- * via /api/uploads/[id]. Durable across deploys and works on serverless hosts
- * where the filesystem is read-only.
+ * Persist an uploaded image and return the value to store on the record.
+ * - product → public Supabase Storage URL (served from Supabase's CDN)
+ * - payment → "payments/<file>" path in the private bucket; view it through
+ *   paymentProofUrl(), which signs a short-lived URL
+ * Falls back to the Postgres `uploads` table when Storage isn't configured.
  */
 export async function saveUpload(
   file: File,
   kind: UploadKind
 ): Promise<{ url: string; id: string }> {
-  if (!ALLOWED_MIME.has(file.type)) {
+  const ext = ALLOWED_MIME[file.type];
+  if (!ext) {
     throw new UploadError("Unsupported image type (use JPEG, PNG, WEBP, or GIF)");
   }
 
@@ -38,13 +50,31 @@ export async function saveUpload(
   }
 
   const id = randomUUID();
+
+  if (isStorageConfigured()) {
+    const path = `${id}.${ext}`;
+    if (kind === "product") {
+      await uploadObject("products", path, buffer, file.type);
+      return { url: getPublicUrl("products", path), id };
+    }
+    await uploadObject("payments", path, buffer, file.type);
+    return { url: `${PAYMENT_PREFIX}${path}`, id };
+  }
+
   const sql = getSql();
   await sql`
     INSERT INTO uploads (id, mime, kind, data, size)
     VALUES (${id}, ${file.type}, ${kind}, ${buffer}, ${buffer.length})
   `;
-
   return { url: `/api/uploads/${id}`, id };
+}
+
+/** Resolve a stored payment screenshot value to a URL an admin can open. */
+export async function paymentProofUrl(stored: string) {
+  if (stored.startsWith(PAYMENT_PREFIX)) {
+    return createSignedUrl("payments", stored.slice(PAYMENT_PREFIX.length));
+  }
+  return stored;
 }
 
 export async function getUpload(

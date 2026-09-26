@@ -231,20 +231,25 @@ export async function dbAddProduct(product: Product) {
 
 export async function dbUpdateProduct(id: string, updates: Partial<Product>) {
   const sql = getSql();
+  // originalPrice and brand can be cleared, so "key present" means "set it",
+  // even to null; every other field keeps its value when omitted.
+  const setOriginalPrice = "originalPrice" in updates;
+  const setBrand = "brand" in updates;
   const rows = (await sql`
     UPDATE products SET
       name = COALESCE(${updates.name ?? null}, name),
       description = COALESCE(${updates.description ?? null}, description),
       price = COALESCE(${updates.price ?? null}, price),
-      original_price = COALESCE(${updates.originalPrice ?? null}, original_price),
+      original_price = CASE WHEN ${setOriginalPrice} THEN ${updates.originalPrice ?? null}::int ELSE original_price END,
       images = COALESCE(${updates.images ?? null}, images),
       category_ids = COALESCE(${updates.categoryIds ?? null}, category_ids),
-      brand = COALESCE(${updates.brand ?? null}, brand),
+      brand = CASE WHEN ${setBrand} THEN ${updates.brand ?? null}::text ELSE brand END,
       stock = COALESCE(${updates.stock ?? null}, stock),
       featured = COALESCE(${updates.featured ?? null}, featured),
       is_new = COALESCE(${updates.isNew ?? null}, is_new),
       is_latest = COALESCE(${updates.isLatest ?? null}, is_latest),
-      tags = COALESCE(${updates.tags ?? null}, tags)
+      tags = COALESCE(${updates.tags ?? null}, tags),
+      updated_at = now()
     WHERE id = ${id}
     RETURNING *
   `) as unknown as DbProduct[];

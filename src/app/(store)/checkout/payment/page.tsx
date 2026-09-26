@@ -9,6 +9,7 @@ import { Order } from "@/lib/types";
 import { PaymentAccountDetails } from "@/lib/payment-details";
 import { Upload, Building2, Smartphone, MessageCircle } from "lucide-react";
 import { SITE, getWhatsAppUrl } from "@/lib/site-config";
+import { compressImage } from "@/lib/compress-image";
 
 function PaymentContent() {
   const router = useRouter();
@@ -94,7 +95,7 @@ function PaymentContent() {
 
     try {
       const formData = new FormData();
-      formData.append("screenshot", screenshot);
+      formData.append("screenshot", await compressImage(screenshot));
 
       const res = await fetch(`/api/orders/${orderId}/payment-proof`, {
         method: "POST",

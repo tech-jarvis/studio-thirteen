@@ -116,13 +116,13 @@ export default function AdminOrdersPage() {
                   <p className="text-sm font-medium text-stone-700 mb-2">Payment screenshot</p>
                   {order.paymentScreenshot ? (
                     <a
-                      href={order.paymentScreenshot}
+                      href={`/api/admin/orders/${order.id}/payment-proof`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block relative w-full max-w-xs aspect-[4/3] border border-stone-200"
                     >
                       <Image
-                        src={order.paymentScreenshot}
+                        src={`/api/admin/orders/${order.id}/payment-proof`}
                         alt="Payment proof"
                         fill
                         className="object-contain"

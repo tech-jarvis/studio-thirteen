@@ -30,8 +30,24 @@ export function getSql(): Sql {
   if (globalForDb.__studioSql) return globalForDb.__studioSql;
   const url = getDatabaseUrl();
   if (!url) throw new Error("DATABASE_URL is not configured");
-  // prepare: false is required by Supabase's transaction pooler (port 6543).
-  const sql = postgres(url, { prepare: false, ssl: "require", max: 5 });
+  const sql = postgres(url, {
+    // Required by Supabase's transaction pooler (port 6543).
+    prepare: false,
+    ssl: "require",
+    // Serverless functions handle one request at a time; a few connections
+    // cover pages that run queries in parallel.
+    max: 5,
+    // Never send several queries down one connection at once: Supabase's
+    // transaction pooler stalls on pipelined queries until they time out.
+    // 0 means one query in flight per connection (postgres.js allows
+    // max_pipeline + 1); extra queries wait for a free connection instead.
+    // @ts-expect-error supported at runtime, missing from postgres.js types
+    max_pipeline: 0,
+    // Close idle sockets before the pooler or a frozen function does, and
+    // fail fast instead of hanging when the database is unreachable.
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
   globalForDb.__studioSql = sql;
   return sql;
 }

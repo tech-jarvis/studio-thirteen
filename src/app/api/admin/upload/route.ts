@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await saveUpload(file, "product");
-    return NextResponse.json({ ...result, backend: "db" });
+    return NextResponse.json(result);
   } catch (err) {
     if (err instanceof UploadError) {
       return NextResponse.json({ error: err.message }, { status: 400 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { listAllProductsAdmin, addProduct, updateProduct, deleteProduct } from "@/lib/store";
 import { Product } from "@/lib/types";
+import { parseProductInput, ProductValidationError } from "@/lib/products/validate";
 
 export async function GET() {
   const authError = await requireAdmin();
@@ -20,29 +21,16 @@ export async function POST(request: NextRequest) {
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const body = await request.json();
-  const product: Product = {
-    id: crypto.randomUUID(),
-    name: body.name,
-    description: body.description ?? "",
-    price: Number(body.price),
-    originalPrice: body.originalPrice ? Number(body.originalPrice) : undefined,
-    images: body.images ?? [],
-    categoryIds: body.categoryIds ?? [],
-    brand: body.brand,
-    stock: Number(body.stock ?? 0),
-    featured: body.featured ?? false,
-    isNew: body.isNew ?? false,
-    isLatest: body.isLatest ?? false,
-    tags: body.tags ?? [],
-  };
-
   try {
+    const body = await request.json();
+    const product: Product = {
+      ...(parseProductInput(body) as Omit<Product, "id">),
+      id: crypto.randomUUID(),
+    };
     await addProduct(product);
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to add product";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return errorResponse(error, "Failed to add product");
   }
 }
 
@@ -50,17 +38,18 @@ export async function PATCH(request: NextRequest) {
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  const body = await request.json();
-  const { id, ...updates } = body;
-  if (!id) {
-    return NextResponse.json({ error: "Product id required" }, { status: 400 });
-  }
-
   try {
-    const product = await updateProduct(id, updates);
+    const { id, ...body } = await request.json();
+    if (!id) {
+      return NextResponse.json({ error: "Product id required" }, { status: 400 });
+    }
+    const product = await updateProduct(id, parseProductInput(body, { partial: true }));
     return NextResponse.json(product);
-  } catch {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  } catch (error) {
+    if (error instanceof Error && error.message === "Product not found") {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    return errorResponse(error, "Failed to update product");
   }
 }
 
@@ -85,4 +74,19 @@ async function requireAdmin() {
   const ok = await isAdminAuthenticated();
   if (!ok) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   return null;
+}
+
+function errorResponse(error: unknown, fallback: string) {
+  if (error instanceof ProductValidationError) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+  // Postgres check constraint (e.g. original_price >= price)
+  if ((error as { code?: string })?.code === "23514") {
+    return NextResponse.json(
+      { error: "Original price must be higher than the sale price" },
+      { status: 400 }
+    );
+  }
+  const message = error instanceof Error ? error.message : fallback;
+  return NextResponse.json({ error: message }, { status: 500 });
 }
