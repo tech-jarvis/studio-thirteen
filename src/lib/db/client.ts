@@ -1,7 +1,7 @@
 import postgres from "postgres";
 
 /** postgres.js forwards unknown URL params to the server as startup settings,
- *  so drop the pooler hints that Supabase/Vercel add (pgbouncer, supa). */
+ *  so drop the pooler hints Supabase adds to its URLs (pgbouncer, supa). */
 function cleanUrl(raw: string) {
   const url = new URL(raw);
   url.searchParams.delete("pgbouncer");

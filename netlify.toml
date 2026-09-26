@@ -1,0 +1,13 @@
+# Netlify detects Next.js and applies its OpenNext adapter automatically —
+# no plugin install needed.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  # Use Node's bundler for the keep-alive function so postgres.js is included.
+  node_bundler = "esbuild"
