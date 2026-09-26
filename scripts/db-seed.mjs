@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -7,6 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const storePath = join(__dirname, "../data/store.json");
 
 const url =
+  process.env.DATABASE_URL_UNPOOLED ??
   process.env.DATABASE_URL ??
   process.env.POSTGRES_URL;
 
@@ -15,7 +16,12 @@ if (!url) {
   process.exit(1);
 }
 
-const sql = neon(url);
+// postgres.js forwards unknown URL params to the server; drop pooler hints.
+const cleanUrl = new URL(url);
+cleanUrl.searchParams.delete("pgbouncer");
+cleanUrl.searchParams.delete("supa");
+
+const sql = postgres(cleanUrl.toString(), { ssl: "require", max: 1 });
 const store = JSON.parse(readFileSync(storePath, "utf-8"));
 
 async function seed() {
@@ -65,7 +71,9 @@ async function seed() {
   console.log(`Seeded ${store.categories.length} categories, ${store.products.length} products.`);
 }
 
-seed().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+seed()
+  .catch((e) => {
+    console.error(e);
+    process.exitCode = 1;
+  })
+  .finally(() => sql.end());

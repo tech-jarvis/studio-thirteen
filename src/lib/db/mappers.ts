@@ -45,7 +45,7 @@ export type DbOrder = {
   payment_status: Order["paymentStatus"];
   order_status: Order["orderStatus"];
   payment_screenshot: string | null;
-  created_at: string;
+  created_at: string | Date;
 };
 
 export function mapCategory(row: DbCategory): Category {
@@ -97,7 +97,7 @@ export function mapOrder(row: DbOrder): Order {
     paymentStatus: row.payment_status,
     orderStatus: row.order_status,
     paymentScreenshot: row.payment_screenshot ?? undefined,
-    createdAt: row.created_at,
+    createdAt: new Date(row.created_at).toISOString(),
   };
 }
 

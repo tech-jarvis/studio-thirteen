@@ -1,4 +1,5 @@
-import { getSql } from "./neon";
+import type postgres from "postgres";
+import { getSql } from "./client";
 import { Category, Product, Order } from "@/lib/types";
 import {
   mapCategory,
@@ -45,13 +46,13 @@ export async function dbGetCategories(type?: string) {
   const sql = getSql();
   const rows = (type
     ? await sql`SELECT * FROM categories WHERE type = ${type} ORDER BY name`
-    : await sql`SELECT * FROM categories ORDER BY name`) as DbCategory[];
+    : await sql`SELECT * FROM categories ORDER BY name`) as unknown as DbCategory[];
   return rows.map(mapCategory);
 }
 
 export async function dbGetCategoryBySlug(slug: string) {
   const sql = getSql();
-  const rows = (await sql`SELECT * FROM categories WHERE slug = ${slug} LIMIT 1`) as DbCategory[];
+  const rows = (await sql`SELECT * FROM categories WHERE slug = ${slug} LIMIT 1`) as unknown as DbCategory[];
   return rows[0] ? mapCategory(rows[0]) : undefined;
 }
 
@@ -89,7 +90,7 @@ export async function dbGetProducts(
       AND (${saleOnly} = false OR (p.original_price IS NOT NULL AND p.original_price > p.price) OR 'sale' = ANY(p.tags))
       AND (${tagFilter}::text IS NULL OR ${tagFilter} = ANY(p.tags))
       AND (${search}::text IS NULL OR p.name ILIKE ${search ? `%${search}%` : null} OR p.brand ILIKE ${search ? `%${search}%` : null})
-  `) as { count: number }[];
+  `) as unknown as { count: number }[];
   const total = countRows[0]?.count ?? 0;
 
   const rows = (await sql`
@@ -104,7 +105,7 @@ export async function dbGetProducts(
       AND (${search}::text IS NULL OR p.name ILIKE ${search ? `%${search}%` : null} OR p.brand ILIKE ${search ? `%${search}%` : null})
     ORDER BY p.created_at DESC
     LIMIT ${pageSize} OFFSET ${offset}
-  `) as DbProduct[];
+  `) as unknown as DbProduct[];
 
   return {
     items: rows.map(mapProduct),
@@ -125,7 +126,7 @@ export async function dbGetProductById(id: string, includeInactive = false) {
   const sql = getSql();
   const rows = (includeInactive
     ? await sql`SELECT * FROM products WHERE id = ${id} LIMIT 1`
-    : await sql`SELECT * FROM products WHERE id = ${id} AND active = true LIMIT 1`) as DbProduct[];
+    : await sql`SELECT * FROM products WHERE id = ${id} AND active = true LIMIT 1`) as unknown as DbProduct[];
   return rows[0] ? mapProduct(rows[0]) : undefined;
 }
 
@@ -134,7 +135,7 @@ export async function dbGetProductsByIds(ids: string[]) {
   const sql = getSql();
   const rows = (await sql`
     SELECT * FROM products WHERE id = ANY(${ids}) AND active = true
-  `) as DbProduct[];
+  `) as unknown as DbProduct[];
   return rows.map(mapProduct);
 }
 
@@ -142,13 +143,13 @@ export async function dbGetOrders(pagination?: Pagination): Promise<Paginated<Or
   const sql = getSql();
   const { page, pageSize, offset } = paginate(pagination?.page, pagination?.pageSize ?? 50);
 
-  const countRows = (await sql`SELECT COUNT(*)::int AS count FROM orders`) as { count: number }[];
+  const countRows = (await sql`SELECT COUNT(*)::int AS count FROM orders`) as unknown as { count: number }[];
   const total = countRows[0]?.count ?? 0;
 
   const rows = (await sql`
     SELECT * FROM orders ORDER BY created_at DESC
     LIMIT ${pageSize} OFFSET ${offset}
-  `) as DbOrder[];
+  `) as unknown as DbOrder[];
 
   return {
     items: rows.map(mapOrder),
@@ -166,13 +167,13 @@ export async function dbGetAllOrders() {
 
 export async function dbGetOrderById(id: string) {
   const sql = getSql();
-  const rows = (await sql`SELECT * FROM orders WHERE id = ${id} LIMIT 1`) as DbOrder[];
+  const rows = (await sql`SELECT * FROM orders WHERE id = ${id} LIMIT 1`) as unknown as DbOrder[];
   return rows[0] ? mapOrder(rows[0]) : undefined;
 }
 
 export async function dbGetOrderByNumber(orderNumber: string) {
   const sql = getSql();
-  const rows = (await sql`SELECT * FROM orders WHERE order_number = ${orderNumber} LIMIT 1`) as DbOrder[];
+  const rows = (await sql`SELECT * FROM orders WHERE order_number = ${orderNumber} LIMIT 1`) as unknown as DbOrder[];
   return rows[0] ? mapOrder(rows[0]) : undefined;
 }
 
@@ -183,7 +184,7 @@ export async function dbAddCategory(category: Category) {
     INSERT INTO categories (id, name, slug, type, description, image)
     VALUES (${category.id}, ${db.name}, ${db.slug}, ${db.type}, ${db.description}, ${db.image})
   RETURNING *
-  `) as DbCategory[];
+  `) as unknown as DbCategory[];
   return mapCategory(rows[0]);
 }
 
@@ -198,7 +199,7 @@ export async function dbUpdateCategory(id: string, updates: Partial<Category>) {
       image = COALESCE(${updates.image ?? null}, image)
     WHERE id = ${id}
     RETURNING *
-  `) as DbCategory[];
+  `) as unknown as DbCategory[];
   if (!rows[0]) throw new Error("Category not found");
   return mapCategory(rows[0]);
 }
@@ -224,7 +225,7 @@ export async function dbAddProduct(product: Product) {
       ${db.images}, ${db.category_ids}, ${db.brand}, ${db.stock},
       ${db.featured}, ${db.is_new}, ${db.is_latest}, ${db.tags}, true
     ) RETURNING *
-  `) as DbProduct[];
+  `) as unknown as DbProduct[];
   return mapProduct(rows[0]);
 }
 
@@ -246,7 +247,7 @@ export async function dbUpdateProduct(id: string, updates: Partial<Product>) {
       tags = COALESCE(${updates.tags ?? null}, tags)
     WHERE id = ${id}
     RETURNING *
-  `) as DbProduct[];
+  `) as unknown as DbProduct[];
   if (!rows[0]) throw new Error("Product not found");
   return mapProduct(rows[0]);
 }
@@ -260,94 +261,87 @@ export async function dbAddOrder(order: Order) {
   const sql = getSql();
   const db = orderToDb(order);
 
-  const results = await sql.transaction([
-    ...order.items.map(
-      (item) =>
-        sql`
-          UPDATE products
-          SET stock = stock - ${item.quantity}
-          WHERE id = ${item.productId} AND active = true AND stock >= ${item.quantity}
-          RETURNING id
-        `
-    ),
-    sql`
+  // Throwing inside begin() rolls back every stock decrement made so far.
+  const inserted = await sql.begin(async (tx) => {
+    for (const item of order.items) {
+      const updated = await tx`
+        UPDATE products
+        SET stock = stock - ${item.quantity}
+        WHERE id = ${item.productId} AND active = true AND stock >= ${item.quantity}
+        RETURNING id
+      `;
+      if (!updated.length) {
+        throw new Error(`Insufficient stock for ${item.productName}`);
+      }
+    }
+
+    return (await tx`
       INSERT INTO orders (
         id, order_number, customer_name, phone, email, address, city, notes,
         items, subtotal, shipping, discount, discount_percent, total,
         payment_method, payment_status, order_status, payment_screenshot, created_at
       ) VALUES (
         ${db.id}, ${db.order_number}, ${db.customer_name}, ${db.phone}, ${db.email},
-        ${db.address}, ${db.city}, ${db.notes}, ${JSON.stringify(db.items)}::jsonb,
+        ${db.address}, ${db.city}, ${db.notes}, ${tx.json(db.items as unknown as postgres.JSONValue)},
         ${db.subtotal}, ${db.shipping}, ${db.discount}, ${db.discount_percent}, ${db.total},
         ${db.payment_method}, ${db.payment_status}, ${db.order_status},
         ${db.payment_screenshot}, ${db.created_at}
       ) RETURNING *
-    `,
-  ]);
+    `) as unknown as DbOrder[];
+  });
 
-  const stockResults = results.slice(0, order.items.length) as { id: string }[][];
-  for (let i = 0; i < order.items.length; i++) {
-    if (!stockResults[i]?.length) {
-      throw new Error(`Insufficient stock for ${order.items[i].productName}`);
-    }
-  }
-
-  const inserted = results[results.length - 1] as DbOrder[];
   return mapOrder(inserted[0]);
 }
 
 export async function dbUpdateOrder(id: string, updates: Partial<Order>) {
   const sql = getSql();
 
-  const existingRows = (await sql`SELECT * FROM orders WHERE id = ${id} LIMIT 1`) as DbOrder[];
-  const existing = existingRows[0];
-  if (!existing) throw new Error("Order not found");
+  const rows = await sql.begin(async (tx) => {
+    const existingRows = (await tx`
+      SELECT * FROM orders WHERE id = ${id} LIMIT 1 FOR UPDATE
+    `) as unknown as DbOrder[];
+    const existing = existingRows[0];
+    if (!existing) throw new Error("Order not found");
 
-  const nextStatus = updates.orderStatus ?? existing.order_status;
-  const wasCancelled = existing.order_status === "cancelled";
-  const willBeCancelled = nextStatus === "cancelled";
+    const nextStatus = updates.orderStatus ?? existing.order_status;
+    const wasCancelled = existing.order_status === "cancelled";
+    const willBeCancelled = nextStatus === "cancelled";
 
-  const updateOrderStmt = sql`
-    UPDATE orders SET
-      payment_status = COALESCE(${updates.paymentStatus ?? null}, payment_status),
-      order_status = COALESCE(${updates.orderStatus ?? null}, order_status),
-      payment_screenshot = COALESCE(${updates.paymentScreenshot ?? null}, payment_screenshot)
-    WHERE id = ${id}
-    RETURNING *
-  `;
+    const updated = (await tx`
+      UPDATE orders SET
+        payment_status = COALESCE(${updates.paymentStatus ?? null}, payment_status),
+        order_status = COALESCE(${updates.orderStatus ?? null}, order_status),
+        payment_screenshot = COALESCE(${updates.paymentScreenshot ?? null}, payment_screenshot)
+      WHERE id = ${id}
+      RETURNING *
+    `) as unknown as DbOrder[];
 
-  // Reconcile stock when an order is cancelled (restore) or un-cancelled (re-decrement).
-  let stockStmts: ReturnType<typeof sql>[] = [];
-  if (!wasCancelled && willBeCancelled) {
-    stockStmts = existing.items.map(
-      (item) => sql`
-        UPDATE products SET stock = stock + ${item.quantity}
-        WHERE id = ${item.productId}
-      `
-    );
-  } else if (wasCancelled && !willBeCancelled) {
-    stockStmts = existing.items.map(
-      (item) => sql`
-        UPDATE products SET stock = GREATEST(stock - ${item.quantity}, 0)
-        WHERE id = ${item.productId}
-      `
-    );
-  }
+    // Reconcile stock when an order is cancelled (restore) or un-cancelled (re-decrement).
+    if (!wasCancelled && willBeCancelled) {
+      for (const item of existing.items) {
+        await tx`
+          UPDATE products SET stock = stock + ${item.quantity}
+          WHERE id = ${item.productId}
+        `;
+      }
+    } else if (wasCancelled && !willBeCancelled) {
+      for (const item of existing.items) {
+        await tx`
+          UPDATE products SET stock = GREATEST(stock - ${item.quantity}, 0)
+          WHERE id = ${item.productId}
+        `;
+      }
+    }
 
-  if (stockStmts.length > 0) {
-    const results = await sql.transaction([updateOrderStmt, ...stockStmts]);
-    const rows = results[0] as DbOrder[];
-    if (!rows[0]) throw new Error("Order not found");
-    return mapOrder(rows[0]);
-  }
+    return updated;
+  });
 
-  const rows = (await updateOrderStmt) as DbOrder[];
   if (!rows[0]) throw new Error("Order not found");
   return mapOrder(rows[0]);
 }
 
 export async function dbHealthCheck() {
   const sql = getSql();
-  const rows = (await sql`SELECT 1 AS ok`) as { ok: number }[];
+  const rows = (await sql`SELECT 1 AS ok`) as unknown as { ok: number }[];
   return rows[0]?.ok === 1;
 }

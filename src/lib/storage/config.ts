@@ -1,4 +1,4 @@
-import { isNeonConfigured } from "@/lib/db/neon";
+import { isDbConfigured } from "@/lib/db/client";
 
 export type StorageBackend = "db";
 
@@ -6,6 +6,6 @@ export function getStorageBackend(): StorageBackend {
   return "db";
 }
 
-export function getDataBackend(): "neon" | "none" {
-  return isNeonConfigured() ? "neon" : "none";
+export function getDataBackend(): "postgres" | "none" {
+  return isDbConfigured() ? "postgres" : "none";
 }

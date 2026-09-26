@@ -110,9 +110,9 @@ export default function AdminProductsPage() {
     <div>
       <h1 className="text-2xl font-semibold text-stone-900 mb-2">Products</h1>
       <p className="text-sm text-stone-500 mb-8">
-        Data: <span className="font-medium">Neon Postgres</span>
+        Data: <span className="font-medium">Supabase Postgres</span>
         {" · "}
-        Images: <span className="font-medium">Neon Postgres</span>
+        Images: <span className="font-medium">Supabase Postgres</span>
       </p>
 
       <form onSubmit={handleAdd} className="bg-white border border-stone-200 p-6 mb-8 space-y-4">

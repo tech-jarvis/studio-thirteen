@@ -1,97 +1,97 @@
-import { isNeonConfigured } from "@/lib/db/neon";
+import { isDbConfigured } from "@/lib/db/client";
 import { Category, Product, Order } from "./types";
-import * as neon from "./db/neon-store";
-import type { Paginated, ProductFilters, Pagination } from "./db/neon-store";
+import * as db from "./db/postgres-store";
+import type { Paginated, ProductFilters, Pagination } from "./db/postgres-store";
 
 export type { Paginated, ProductFilters, Pagination };
 
 export async function getCategories(type?: string) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetCategories(type);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetCategories(type);
 }
 
 export async function getCategoryBySlug(slug: string) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetCategoryBySlug(slug);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetCategoryBySlug(slug);
 }
 
 export async function getProducts(
   filters?: ProductFilters,
   pagination?: Pagination
 ) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetProducts(filters, pagination);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetProducts(filters, pagination);
 }
 
 export async function getProductById(id: string) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetProductById(id);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetProductById(id);
 }
 
 export async function getProductsByIds(ids: string[]) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetProductsByIds(ids);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetProductsByIds(ids);
 }
 
 export async function getOrders() {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetAllOrders();
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetAllOrders();
 }
 
 export async function getOrderById(id: string) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetOrderById(id);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetOrderById(id);
 }
 
 export async function getOrderByNumber(orderNumber: string) {
-  if (!isNeonConfigured()) throw new Error("Database not configured");
-  return neon.dbGetOrderByNumber(orderNumber);
+  if (!isDbConfigured()) throw new Error("Database not configured");
+  return db.dbGetOrderByNumber(orderNumber);
 }
 
 export async function addCategory(category: Category) {
-  return neon.dbAddCategory(category);
+  return db.dbAddCategory(category);
 }
 
 export async function updateCategory(id: string, updates: Partial<Category>) {
-  return neon.dbUpdateCategory(id, updates);
+  return db.dbUpdateCategory(id, updates);
 }
 
 export async function deleteCategory(id: string) {
-  return neon.dbDeleteCategory(id);
+  return db.dbDeleteCategory(id);
 }
 
 export async function addProduct(product: Product) {
-  return neon.dbAddProduct(product);
+  return db.dbAddProduct(product);
 }
 
 export async function updateProduct(id: string, updates: Partial<Product>) {
-  return neon.dbUpdateProduct(id, updates);
+  return db.dbUpdateProduct(id, updates);
 }
 
 export async function deleteProduct(id: string) {
-  return neon.dbDeleteProduct(id);
+  return db.dbDeleteProduct(id);
 }
 
 export async function addOrder(order: Order) {
-  return neon.dbAddOrder(order);
+  return db.dbAddOrder(order);
 }
 
 export async function updateOrder(id: string, updates: Partial<Order>) {
-  return neon.dbUpdateOrder(id, updates);
+  return db.dbUpdateOrder(id, updates);
 }
 
 export async function attachOrderPaymentProof(id: string, paymentScreenshot: string) {
-  return neon.dbUpdateOrder(id, { paymentScreenshot });
+  return db.dbUpdateOrder(id, { paymentScreenshot });
 }
 
 export async function listAllProductsAdmin() {
-  return neon.dbListAllProducts();
+  return db.dbListAllProducts();
 }
 
 export async function healthCheck() {
-  if (!isNeonConfigured()) return { database: false as const };
+  if (!isDbConfigured()) return { database: false as const };
   try {
-    const ok = await neon.dbHealthCheck();
+    const ok = await db.dbHealthCheck();
     return { database: ok };
   } catch {
     return { database: false as const };

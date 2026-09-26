@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getPool } from "@/lib/db/neon";
+import { getSql } from "@/lib/db/client";
 
 export type UploadKind = "product" | "payment";
 
@@ -38,11 +38,11 @@ export async function saveUpload(
   }
 
   const id = randomUUID();
-  const pool = getPool();
-  await pool.query(
-    `INSERT INTO uploads (id, mime, kind, data, size) VALUES ($1, $2, $3, $4, $5)`,
-    [id, file.type, kind, buffer, buffer.length]
-  );
+  const sql = getSql();
+  await sql`
+    INSERT INTO uploads (id, mime, kind, data, size)
+    VALUES (${id}, ${file.type}, ${kind}, ${buffer}, ${buffer.length})
+  `;
 
   return { url: `/api/uploads/${id}`, id };
 }
@@ -50,12 +50,9 @@ export async function saveUpload(
 export async function getUpload(
   id: string
 ): Promise<{ mime: string; data: Buffer } | null> {
-  const pool = getPool();
-  const result = await pool.query(
-    `SELECT mime, data FROM uploads WHERE id = $1 LIMIT 1`,
-    [id]
-  );
-  const row = result.rows[0];
+  const sql = getSql();
+  const rows = await sql`SELECT mime, data FROM uploads WHERE id = ${id} LIMIT 1`;
+  const row = rows[0];
   if (!row) return null;
   return { mime: row.mime as string, data: row.data as Buffer };
 }
