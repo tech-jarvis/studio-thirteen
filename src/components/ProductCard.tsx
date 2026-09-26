@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Play } from "lucide-react";
 import { isOptimizableImage } from "@/lib/image-host";
 import Link from "next/link";
 import { Product } from "@/lib/types";
@@ -20,6 +21,12 @@ export default function ProductCard({ product }: { product: Product }) {
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           unoptimized={!isOptimizableImage(product.images[0] ?? "/")}
         />
+
+        {(product.videos?.length ?? 0) > 0 && (
+          <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 flex items-center gap-1 tracking-wide">
+            <Play size={10} fill="currentColor" /> VIDEO
+          </span>
+        )}
 
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {discount && discount > 0 && (

@@ -20,6 +20,8 @@ export interface Product {
   price: number;
   originalPrice?: number;
   images: string[];
+  /** Product video URLs (uploaded to Supabase Storage). */
+  videos: string[];
   categoryIds: string[];
   brand?: string;
   stock: number;

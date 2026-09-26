@@ -3,6 +3,7 @@ import { Product } from "@/lib/types";
 export class ProductValidationError extends Error {}
 
 const MAX_IMAGES = 8;
+export const MAX_VIDEOS = 3;
 
 function toInt(value: unknown, field: string, min: number): number {
   const n = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
@@ -63,6 +64,16 @@ export function parseProductInput(
       throw new ProductValidationError(`At most ${MAX_IMAGES} images per product`);
     }
     out.images = images;
+  }
+  if (!partial || has("videos")) {
+    const videos = toStringArray(body.videos ?? [], "Videos");
+    if (videos.length > MAX_VIDEOS) {
+      throw new ProductValidationError(`At most ${MAX_VIDEOS} videos per product`);
+    }
+    if (videos.some((v) => !/^https:\/\//.test(v))) {
+      throw new ProductValidationError("Videos must be uploaded files or https:// links");
+    }
+    out.videos = videos;
   }
   if (!partial || has("categoryIds")) {
     out.categoryIds = toStringArray(body.categoryIds ?? [], "Categories");

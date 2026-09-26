@@ -5,6 +5,9 @@ import { Product, Category } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import { Plus, Trash2, Star, Pencil, X, RotateCcw } from "lucide-react";
 import { compressImage } from "@/lib/compress-image";
+import { uploadVideo, MAX_VIDEO_MB } from "@/lib/upload-video";
+
+const MAX_VIDEOS = 3;
 
 const EMPTY_FORM = {
   name: "",
@@ -14,6 +17,7 @@ const EMPTY_FORM = {
   brand: "",
   stock: "10",
   images: [] as string[],
+  videos: [] as string[],
   categoryIds: [] as string[],
   featured: false,
   isNew: false,
@@ -28,6 +32,8 @@ export default function AdminProductsPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  /** Upload progress 0–100 while a video is uploading, otherwise null. */
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   function load() {
@@ -71,6 +77,30 @@ export default function AdminProductsPage() {
     setImageUrl("");
   }
 
+  async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (form.videos.length >= MAX_VIDEOS) {
+      setError(`At most ${MAX_VIDEOS} videos per product.`);
+      return;
+    }
+    setError("");
+    setVideoProgress(0);
+    try {
+      const url = await uploadVideo(file, setVideoProgress);
+      setForm((f) => ({ ...f, videos: [...f.videos, url] }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Video upload failed");
+    } finally {
+      setVideoProgress(null);
+    }
+  }
+
+  function removeVideo(index: number) {
+    setForm((f) => ({ ...f, videos: f.videos.filter((_, i) => i !== index) }));
+  }
+
   function removeImage(index: number) {
     setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== index) }));
   }
@@ -102,6 +132,7 @@ export default function AdminProductsPage() {
       brand: p.brand ?? "",
       stock: String(p.stock),
       images: [...p.images],
+      videos: [...(p.videos ?? [])],
       categoryIds: [...p.categoryIds],
       featured: Boolean(p.featured),
       isNew: Boolean(p.isNew),
@@ -238,6 +269,39 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
+        <div className="space-y-2">
+          <p className="text-sm text-stone-600">
+            Videos <span className="text-stone-400">(optional, up to {MAX_VIDEOS} · MP4/MOV/WebM · max {MAX_VIDEO_MB} MB each — short 10–30s clips work best)</span>
+          </p>
+          {form.videos.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {form.videos.map((src, i) => (
+                <div key={`${src}-${i}`} className="relative">
+                  <video src={src} muted playsInline preload="metadata" className="h-28 w-20 object-cover border border-stone-200 bg-stone-900" />
+                  <button type="button" title="Remove video" onClick={() => removeVideo(i)} className="absolute -top-2 -right-2 bg-white border border-stone-300 rounded-full p-0.5 text-stone-500 hover:text-red-500">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {videoProgress !== null ? (
+            <div className="max-w-sm">
+              <div className="h-2 bg-stone-200 rounded">
+                <div className="h-2 bg-stone-900 rounded transition-all" style={{ width: `${videoProgress}%` }} />
+              </div>
+              <p className="text-xs text-stone-500 mt-1">Uploading video… {videoProgress}% — keep this page open</p>
+            </div>
+          ) : (
+            form.videos.length < MAX_VIDEOS && (
+              <label className="inline-flex items-center gap-2 text-sm text-stone-700 border border-stone-200 px-3 py-1.5 cursor-pointer hover:border-stone-400">
+                <input type="file" accept="video/mp4,video/quicktime,video/webm" onChange={handleVideoUpload} className="hidden" />
+                Upload video
+              </label>
+            )
+          )}
+        </div>
+
         <textarea required placeholder="Description" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full border border-stone-200 px-3 py-2 text-sm" />
 
         <div>
@@ -264,7 +328,7 @@ export default function AdminProductsPage() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
-        <button type="submit" disabled={loading || uploading} className="bg-stone-900 text-white px-6 py-2.5 text-sm font-medium hover:bg-rose-600 transition-colors flex items-center gap-1 disabled:opacity-50">
+        <button type="submit" disabled={loading || uploading || videoProgress !== null} className="bg-stone-900 text-white px-6 py-2.5 text-sm font-medium hover:bg-rose-600 transition-colors flex items-center gap-1 disabled:opacity-50">
           {editingId ? <><Pencil size={16} /> Save changes</> : <><Plus size={16} /> Add Product</>}
         </button>
       </form>

@@ -222,11 +222,11 @@ export async function dbAddProduct(product: Product) {
   const db = productToDb(product);
   const rows = (await sql`
     INSERT INTO products (
-      id, name, description, price, original_price, images, category_ids,
+      id, name, description, price, original_price, images, videos, category_ids,
       brand, stock, featured, is_new, is_latest, tags, active
     ) VALUES (
       ${product.id}, ${db.name}, ${db.description}, ${db.price}, ${db.original_price},
-      ${db.images}, ${db.category_ids}, ${db.brand}, ${db.stock},
+      ${db.images}, ${db.videos}, ${db.category_ids}, ${db.brand}, ${db.stock},
       ${db.featured}, ${db.is_new}, ${db.is_latest}, ${db.tags}, true
     ) RETURNING *
   `) as unknown as DbProduct[];
@@ -246,6 +246,7 @@ export async function dbUpdateProduct(id: string, updates: Partial<Product>) {
       price = COALESCE(${updates.price ?? null}, price),
       original_price = CASE WHEN ${setOriginalPrice} THEN ${updates.originalPrice ?? null}::int ELSE original_price END,
       images = COALESCE(${updates.images ?? null}, images),
+      videos = COALESCE(${updates.videos ?? null}, videos),
       category_ids = COALESCE(${updates.categoryIds ?? null}, category_ids),
       brand = CASE WHEN ${setBrand} THEN ${updates.brand ?? null}::text ELSE brand END,
       stock = COALESCE(${updates.stock ?? null}, stock),

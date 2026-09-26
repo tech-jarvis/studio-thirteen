@@ -18,6 +18,7 @@ export type DbProduct = {
   price: number;
   original_price: number | null;
   images: string[];
+  videos: string[];
   category_ids: string[];
   brand: string | null;
   stock: number;
@@ -72,6 +73,7 @@ export function mapProduct(row: DbProduct): Product {
     price: row.price,
     originalPrice: row.original_price ?? undefined,
     images: row.images ?? [],
+    videos: row.videos ?? [],
     categoryIds: row.category_ids ?? [],
     brand: row.brand ?? undefined,
     stock: row.stock,
@@ -116,6 +118,7 @@ export function productToDb(
     price: product.price,
     original_price: product.originalPrice ?? null,
     images: product.images ?? [],
+    videos: product.videos ?? [],
     category_ids: product.categoryIds ?? [],
     brand: product.brand ?? null,
     stock: product.stock ?? 0,

@@ -10,6 +10,7 @@ import { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import ProductCard from "@/components/ProductCard";
 import { use } from "react";
+import { Play } from "lucide-react";
 
 export default function ProductPage({
   params,
@@ -64,6 +65,13 @@ export default function ProductPage({
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : null;
 
+  // Images first, then videos, in one gallery.
+  const media = [
+    ...product.images.map((src) => ({ type: "image" as const, src })),
+    ...(product.videos ?? []).map((src) => ({ type: "video" as const, src })),
+  ];
+  const current = media[activeImage] ?? media[0];
+
   function handleAdd() {
     if (!product || product.stock <= 0) return;
     add({
@@ -89,32 +97,55 @@ export default function ProductPage({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
         <div className="space-y-3">
           <div className="relative aspect-[3/4] bg-stone-100 overflow-hidden rounded-sm">
-            <Image
-              src={product.images[activeImage] ?? product.images[0]}
-              alt={product.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-              unoptimized={!isOptimizableImage(product.images[activeImage] ?? product.images[0] ?? "/")}
-            />
-            {discount && (
+            {current?.type === "video" ? (
+              <video
+                key={current.src}
+                src={current.src}
+                controls
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 w-full h-full object-contain bg-black"
+              />
+            ) : current ? (
+              <Image
+                src={current.src}
+                alt={product.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+                unoptimized={!isOptimizableImage(current.src)}
+              />
+            ) : null}
+            {discount && current?.type !== "video" && (
               <div className="absolute top-3 left-3 bg-rose-600 text-white text-xs px-2 py-1 font-medium">
                 -{discount}%
               </div>
             )}
           </div>
-          {product.images.length > 1 && (
-            <div className="flex gap-2">
-              {product.images.map((img, i) => (
+          {media.length > 1 && (
+            <div className="flex flex-wrap gap-2">
+              {media.map((item, i) => (
                 <button
-                  key={i}
+                  key={`${item.type}-${i}`}
                   onClick={() => setActiveImage(i)}
-                  className={`relative w-20 aspect-square overflow-hidden rounded-sm border-2 transition-colors ${
+                  aria-label={item.type === "video" ? "Play video" : `Image ${i + 1}`}
+                  className={`relative w-20 aspect-square overflow-hidden rounded-sm border-2 transition-colors bg-stone-900 ${
                     activeImage === i ? "border-stone-900" : "border-transparent"
                   }`}
                 >
-                  <Image src={img} alt="" fill className="object-cover" sizes="80px" unoptimized={!isOptimizableImage(img)} />
+                  {item.type === "video" ? (
+                    <>
+                      <video src={`${item.src}#t=0.5`} muted playsInline preload="metadata" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-white/90 rounded-full p-1.5 text-stone-900">
+                          <Play size={14} fill="currentColor" />
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    <Image src={item.src} alt="" fill className="object-cover" sizes="80px" unoptimized={!isOptimizableImage(item.src)} />
+                  )}
                 </button>
               ))}
             </div>

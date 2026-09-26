@@ -3,7 +3,7 @@
  * Uses the project's secret key, so never import this from client code.
  */
 
-export type Bucket = "products" | "payments";
+export type Bucket = "products" | "payments" | "product-videos";
 
 function getConfig() {
   const url = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim();
@@ -70,4 +70,22 @@ export async function createSignedUrl(bucket: Bucket, path: string, expiresIn = 
   }
   const { signedURL } = (await res.json()) as { signedURL: string };
   return `${url}/storage/v1${signedURL}`;
+}
+
+/**
+ * One-time URL the browser can PUT a file to directly, bypassing our server
+ * (serverless request bodies are too small for videos). Valid for 2 hours.
+ */
+export async function createSignedUploadUrl(bucket: Bucket, path: string) {
+  const { url, key } = requireConfig();
+  const res = await fetch(`${url}/storage/v1/object/upload/sign/${bucket}/${path}`, {
+    method: "POST",
+    headers: { ...authHeaders(key), "Content-Type": "application/json" },
+    body: "{}",
+  });
+  if (!res.ok) {
+    throw new Error(`Could not create upload URL (${res.status}): ${await res.text()}`);
+  }
+  const { url: signedPath } = (await res.json()) as { url: string };
+  return `${url}/storage/v1${signedPath}`;
 }
