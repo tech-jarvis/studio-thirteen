@@ -3,6 +3,7 @@ import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { listAllProductsAdmin, addProduct, updateProduct, deleteProduct } from "@/lib/store";
 import { Product } from "@/lib/types";
 import { parseProductInput, ProductValidationError } from "@/lib/products/validate";
+import { refreshStorefront } from "@/lib/revalidate";
 
 export async function GET() {
   const authError = await requireAdmin();
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
       id: crypto.randomUUID(),
     };
     await addProduct(product);
+    refreshStorefront();
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     return errorResponse(error, "Failed to add product");
@@ -44,6 +46,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Product id required" }, { status: 400 });
     }
     const product = await updateProduct(id, parseProductInput(body, { partial: true }));
+    refreshStorefront();
     return NextResponse.json(product);
   } catch (error) {
     if (error instanceof Error && error.message === "Product not found") {
@@ -64,6 +67,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     await deleteProduct(id);
+    refreshStorefront();
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });

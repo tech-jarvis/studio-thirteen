@@ -7,16 +7,20 @@ import {
   getNewArrivals,
   getCategories,
 } from "@/lib/products";
+import { getSettings } from "@/lib/settings";
+import { isOptimizableImage } from "@/lib/image-host";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const [featured, latest, newArrivals, categories] = await Promise.all([
+  const [featured, latest, newArrivals, categories, { home }] = await Promise.all([
     getFeatured(),
     getLatestProducts(),
     getNewArrivals(),
     getCategories(),
+    getSettings(),
   ]);
+  const { hero, sections, promo } = home;
 
   const seasonCategories = categories.filter((c) => c.type === "season");
   const typeCategories = categories.filter((c) => c.type === "product_type");
@@ -24,48 +28,55 @@ export default async function HomePage() {
   return (
     <main>
       <section className="relative h-[85vh] min-h-[520px] flex items-end bg-stone-100 overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1600&q=80"
-          alt="Studio Thirteen — Pakistani Fashion"
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="100vw"
-        />
+        {hero.image && (
+          <Image
+            src={hero.image}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+            unoptimized={!isOptimizableImage(hero.image)}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20 w-full">
-          <p className="text-rose-400 text-xs tracking-[0.3em] uppercase mb-3 font-medium">
-            We Deal in Brands Only
-          </p>
-          <h1 className="text-white text-4xl sm:text-6xl font-semibold leading-tight max-w-2xl mb-6">
-            Premium Branded
-            <br />
-            Lawn &amp; Suits
+          {hero.eyebrow && (
+            <p className="text-rose-400 text-xs tracking-[0.3em] uppercase mb-3 font-medium">
+              {hero.eyebrow}
+            </p>
+          )}
+          <h1 className="text-white text-4xl sm:text-6xl font-semibold leading-tight max-w-2xl mb-6 whitespace-pre-line">
+            {hero.title}
           </h1>
-          <p className="text-stone-300 text-base max-w-md mb-8">
-            Unstitched 2pc &amp; 3pc, embroidered collections, and patches.
-            Minimum order Rs. 1,000. Cash on delivery, or pay by bank transfer for 5% off.
-          </p>
+          {hero.subtitle && (
+            <p className="text-stone-300 text-base max-w-md mb-8">{hero.subtitle}</p>
+          )}
           <div className="flex flex-wrap gap-3">
-            <Link
-              href="/shop"
-              className="inline-block bg-white text-stone-900 text-sm font-medium px-8 py-3 hover:bg-rose-600 hover:text-white transition-colors tracking-wide"
-            >
-              Shop Now
-            </Link>
-            <Link
-              href="/shop?tag=sale"
-              className="inline-block border border-white text-white text-sm font-medium px-8 py-3 hover:bg-white hover:text-stone-900 transition-colors tracking-wide"
-            >
-              View Sale
-            </Link>
+            {hero.primaryLabel && (
+              <Link
+                href={hero.primaryLink || "/shop"}
+                className="inline-block bg-white text-stone-900 text-sm font-medium px-8 py-3 hover:bg-rose-600 hover:text-white transition-colors tracking-wide"
+              >
+                {hero.primaryLabel}
+              </Link>
+            )}
+            {hero.secondaryLabel && (
+              <Link
+                href={hero.secondaryLink || "/shop"}
+                className="inline-block border border-white text-white text-sm font-medium px-8 py-3 hover:bg-white hover:text-stone-900 transition-colors tracking-wide"
+              >
+                {hero.secondaryLabel}
+              </Link>
+            )}
           </div>
         </div>
       </section>
 
+      {sections.seasons.show && seasonCategories.length > 0 && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-xs tracking-[0.25em] uppercase text-stone-400 mb-8 font-medium">
-          Shop by Season
+          {sections.seasons.title}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {seasonCategories.map((cat) => (
@@ -81,6 +92,7 @@ export default async function HomePage() {
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   sizes="25vw"
+                  unoptimized={!isOptimizableImage(cat.image)}
                 />
               )}
               <div className="absolute inset-0 bg-black/30 group-hover:bg-black/45 transition-colors" />
@@ -91,10 +103,16 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      )}
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      {sections.types.show && typeCategories.length > 0 && (
+      <section
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${
+          sections.seasons.show && seasonCategories.length > 0 ? "pb-16" : "py-16"
+        }`}
+      >
         <h2 className="text-xs tracking-[0.25em] uppercase text-stone-400 mb-6 font-medium">
-          Product Type
+          {sections.types.title}
         </h2>
         <div className="flex flex-wrap gap-2">
           {typeCategories.map((cat) => (
@@ -108,11 +126,12 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      )}
 
-      {latest.length > 0 && (
+      {sections.latest.show && latest.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
           <div className="flex items-end justify-between mb-8">
-            <h2 className="text-2xl font-semibold text-stone-900">Latest Products</h2>
+            <h2 className="text-2xl font-semibold text-stone-900">{sections.latest.title}</h2>
             <Link href="/shop?latest=true" className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
               View All →
             </Link>
@@ -125,9 +144,10 @@ export default async function HomePage() {
         </section>
       )}
 
+      {sections.featured.show && featured.length > 0 && (
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="flex items-end justify-between mb-8">
-          <h2 className="text-2xl font-semibold text-stone-900">Featured</h2>
+          <h2 className="text-2xl font-semibold text-stone-900">{sections.featured.title}</h2>
           <Link href="/shop" className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
             View All →
           </Link>
@@ -138,29 +158,33 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      )}
 
+      {promo.show && (
       <section className="bg-rose-700 py-14 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-white text-2xl sm:text-3xl font-semibold mb-3">
-            5% Off on Bank Transfer
+            {promo.title}
           </h2>
-          <p className="text-rose-100 text-sm mb-6 leading-relaxed">
-            Transfer to our account and upload your payment screenshot to save 5%.
-            Prefer cash on delivery? That works too — choose at checkout.
-          </p>
-          <Link
-            href="/shop"
-            className="inline-block bg-white text-rose-700 text-sm font-medium px-8 py-3 hover:bg-stone-900 hover:text-white transition-colors"
-          >
-            Start Shopping
-          </Link>
+          {promo.text && (
+            <p className="text-rose-100 text-sm mb-6 leading-relaxed">{promo.text}</p>
+          )}
+          {promo.buttonLabel && (
+            <Link
+              href={promo.buttonLink || "/shop"}
+              className="inline-block bg-white text-rose-700 text-sm font-medium px-8 py-3 hover:bg-stone-900 hover:text-white transition-colors"
+            >
+              {promo.buttonLabel}
+            </Link>
+          )}
         </div>
       </section>
+      )}
 
-      {newArrivals.length > 0 && (
+      {sections.newArrivals.show && newArrivals.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex items-end justify-between mb-8">
-            <h2 className="text-2xl font-semibold text-stone-900">New Arrivals</h2>
+            <h2 className="text-2xl font-semibold text-stone-900">{sections.newArrivals.title}</h2>
             <Link href="/shop?new=true" className="text-sm text-stone-500 hover:text-stone-900 transition-colors">
               View All →
             </Link>

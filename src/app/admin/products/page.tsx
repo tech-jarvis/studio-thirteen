@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Product, Category } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
-import { Plus, Trash2, Star, Pencil, X } from "lucide-react";
+import { Plus, Trash2, Star, Pencil, X, RotateCcw } from "lucide-react";
 import { compressImage } from "@/lib/compress-image";
 
 const EMPTY_FORM = {
@@ -153,9 +153,18 @@ export default function AdminProductsPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this product?")) return;
+    if (!confirm("Hide this product from the shop? You can restore it later.")) return;
     await fetch(`/api/admin/products?id=${id}`, { method: "DELETE" });
     if (editingId === id) resetForm();
+    load();
+  }
+
+  async function restore(id: string) {
+    await fetch("/api/admin/products", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, active: true }),
+    });
     load();
   }
 
@@ -274,9 +283,12 @@ export default function AdminProductsPage() {
           </thead>
           <tbody>
             {products.map((p) => (
-              <tr key={p.id} className="border-b border-stone-50">
+              <tr key={p.id} className={`border-b border-stone-50 ${p.active === false ? "bg-stone-50 text-stone-400" : ""}`}>
                 <td className="px-4 py-3">
-                  <p className="font-medium">{p.name}</p>
+                  <p className="font-medium">
+                    {p.name}
+                    {p.active === false && <span className="ml-2 text-xs font-normal text-amber-600">Hidden</span>}
+                  </p>
                   <p className="text-xs text-stone-400">{p.brand}</p>
                 </td>
                 <td className="px-4 py-3 text-xs text-stone-500">
@@ -300,7 +312,11 @@ export default function AdminProductsPage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-3">
                     <button title="Edit" onClick={() => startEdit(p)} className="text-stone-400 hover:text-stone-900"><Pencil size={16} /></button>
-                    <button title="Delete" onClick={() => handleDelete(p.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={16} /></button>
+                    {p.active === false ? (
+                      <button title="Restore to shop" onClick={() => restore(p.id)} className="text-emerald-600 hover:text-emerald-800 flex items-center gap-1 text-xs"><RotateCcw size={14} /> Restore</button>
+                    ) : (
+                      <button title="Hide from shop" onClick={() => handleDelete(p.id)} className="text-stone-300 hover:text-red-500"><Trash2 size={16} /></button>
+                    )}
                   </div>
                 </td>
               </tr>

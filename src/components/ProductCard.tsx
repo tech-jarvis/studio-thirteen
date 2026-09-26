@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { isOptimizableImage } from "@/lib/image-host";
 import Link from "next/link";
 import { Product } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
@@ -17,6 +18,7 @@ export default function ProductCard({ product }: { product: Product }) {
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-500"
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          unoptimized={!isOptimizableImage(product.images[0] ?? "/")}
         />
 
         <div className="absolute top-2 left-2 flex flex-col gap-1">

@@ -7,6 +7,8 @@ export type DbCategory = {
   type: "season" | "product_type";
   description: string | null;
   image: string | null;
+  sort_order: number;
+  show_in_menu: boolean;
 };
 
 export type DbProduct = {
@@ -23,6 +25,7 @@ export type DbProduct = {
   is_new: boolean;
   is_latest: boolean;
   tags: string[];
+  active: boolean;
   created_at?: string;
 };
 
@@ -56,6 +59,8 @@ export function mapCategory(row: DbCategory): Category {
     type: row.type,
     description: row.description ?? undefined,
     image: row.image ?? undefined,
+    sortOrder: row.sort_order ?? 0,
+    showInMenu: row.show_in_menu ?? true,
   };
 }
 
@@ -74,6 +79,7 @@ export function mapProduct(row: DbProduct): Product {
     isNew: row.is_new,
     isLatest: row.is_latest,
     tags: row.tags ?? [],
+    active: row.active,
   };
 }
 
@@ -127,6 +133,8 @@ export function categoryToDb(category: Partial<Category> & { name: string; slug:
     type: category.type,
     description: category.description ?? null,
     image: category.image ?? null,
+    sort_order: category.sortOrder ?? 0,
+    show_in_menu: category.showInMenu ?? true,
   };
 }
 

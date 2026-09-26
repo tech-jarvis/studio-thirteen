@@ -7,9 +7,11 @@ import { formatPrice } from "@/lib/format";
 import { Order } from "@/lib/types";
 import { use } from "react";
 import { CheckCircle } from "lucide-react";
-import { SITE, getWhatsAppUrl } from "@/lib/site-config";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
+import { whatsAppUrl } from "@/lib/settings-types";
 
 function OrderContent({ id }: { id: string }) {
+  const store = useStoreSettings();
   const searchParams = useSearchParams();
   const submitted = searchParams.get("submitted") === "1";
   const confirmed = searchParams.get("confirmed") === "1";
@@ -152,16 +154,16 @@ function OrderContent({ id }: { id: string }) {
       <p className="text-sm text-stone-500 text-center mb-6">
         Questions?{" "}
         <a
-          href={getWhatsAppUrl(`Hi, about order ${order.orderNumber}`)}
+          href={whatsAppUrl(store.whatsapp, `Hi, about order ${order.orderNumber}`)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#128C7E] hover:underline"
         >
-          WhatsApp {SITE.phone}
+          WhatsApp {store.phone}
         </a>
         {" · "}
-        <a href={`mailto:${SITE.email}`} className="text-stone-600 hover:underline">
-          {SITE.email}
+        <a href={`mailto:${store.email}`} className="text-stone-600 hover:underline">
+          {store.email}
         </a>
       </p>
 

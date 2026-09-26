@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { isOptimizableImage } from "@/lib/image-host";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -49,7 +50,7 @@ export default function CartPage() {
           {items.map((item) => (
             <div key={item.productId} className="flex gap-4 sm:gap-6 pb-6 border-b border-stone-100">
               <Link href={`/product/${item.productId}`} className="relative w-24 sm:w-32 aspect-[3/4] flex-shrink-0 bg-stone-100 overflow-hidden rounded-sm">
-                <Image src={item.image} alt={item.name} fill className="object-cover" sizes="128px" />
+                <Image src={item.image} alt={item.name} fill className="object-cover" sizes="128px" unoptimized={!isOptimizableImage(item.image)} />
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between gap-2">

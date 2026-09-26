@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { isOptimizableImage } from "@/lib/image-host";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -95,6 +96,7 @@ export default function ProductPage({
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
+              unoptimized={!isOptimizableImage(product.images[activeImage] ?? product.images[0] ?? "/")}
             />
             {discount && (
               <div className="absolute top-3 left-3 bg-rose-600 text-white text-xs px-2 py-1 font-medium">
@@ -112,7 +114,7 @@ export default function ProductPage({
                     activeImage === i ? "border-stone-900" : "border-transparent"
                   }`}
                 >
-                  <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+                  <Image src={img} alt="" fill className="object-cover" sizes="80px" unoptimized={!isOptimizableImage(img)} />
                 </button>
               ))}
             </div>

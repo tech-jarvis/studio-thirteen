@@ -7,6 +7,10 @@ export interface Category {
   type: CategoryType;
   description?: string;
   image?: string;
+  /** Lower numbers come first in menus and on the homepage. */
+  sortOrder?: number;
+  /** Whether the category appears in the navigation menus. */
+  showInMenu?: boolean;
 }
 
 export interface Product {
@@ -23,6 +27,8 @@ export interface Product {
   isNew?: boolean;
   isLatest?: boolean;
   tags: string[];
+  /** False when the product is hidden (deleted) from the shop. */
+  active?: boolean;
 }
 
 export interface CartItem {

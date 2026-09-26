@@ -45,8 +45,8 @@ function paginate(page = 1, pageSize = 24) {
 export async function dbGetCategories(type?: string) {
   const sql = getSql();
   const rows = (type
-    ? await sql`SELECT * FROM categories WHERE type = ${type} ORDER BY name`
-    : await sql`SELECT * FROM categories ORDER BY name`) as unknown as DbCategory[];
+    ? await sql`SELECT * FROM categories WHERE type = ${type} ORDER BY sort_order, name`
+    : await sql`SELECT * FROM categories ORDER BY sort_order, name`) as unknown as DbCategory[];
   return rows.map(mapCategory);
 }
 
@@ -181,8 +181,9 @@ export async function dbAddCategory(category: Category) {
   const sql = getSql();
   const db = categoryToDb(category);
   const rows = (await sql`
-    INSERT INTO categories (id, name, slug, type, description, image)
-    VALUES (${category.id}, ${db.name}, ${db.slug}, ${db.type}, ${db.description}, ${db.image})
+    INSERT INTO categories (id, name, slug, type, description, image, sort_order, show_in_menu)
+    VALUES (${category.id}, ${db.name}, ${db.slug}, ${db.type}, ${db.description}, ${db.image},
+      ${db.sort_order}, ${db.show_in_menu})
   RETURNING *
   `) as unknown as DbCategory[];
   return mapCategory(rows[0]);
@@ -195,8 +196,11 @@ export async function dbUpdateCategory(id: string, updates: Partial<Category>) {
       name = COALESCE(${updates.name ?? null}, name),
       slug = COALESCE(${updates.slug ?? null}, slug),
       type = COALESCE(${updates.type ?? null}, type),
-      description = COALESCE(${updates.description ?? null}, description),
-      image = COALESCE(${updates.image ?? null}, image)
+      description = CASE WHEN ${"description" in updates} THEN ${updates.description ?? null}::text ELSE description END,
+      image = CASE WHEN ${"image" in updates} THEN ${updates.image ?? null}::text ELSE image END,
+      sort_order = COALESCE(${updates.sortOrder ?? null}::int, sort_order),
+      show_in_menu = COALESCE(${updates.showInMenu ?? null}::boolean, show_in_menu),
+      updated_at = now()
     WHERE id = ${id}
     RETURNING *
   `) as unknown as DbCategory[];
@@ -249,6 +253,7 @@ export async function dbUpdateProduct(id: string, updates: Partial<Product>) {
       is_new = COALESCE(${updates.isNew ?? null}, is_new),
       is_latest = COALESCE(${updates.isLatest ?? null}, is_latest),
       tags = COALESCE(${updates.tags ?? null}, tags),
+      active = COALESCE(${updates.active ?? null}::boolean, active),
       updated_at = now()
     WHERE id = ${id}
     RETURNING *

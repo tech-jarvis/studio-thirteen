@@ -70,6 +70,7 @@ export function parseProductInput(
   if (!partial || has("tags")) {
     out.tags = toStringArray(body.tags ?? [], "Tags");
   }
+  if (has("active")) out.active = body.active === true;
   for (const flag of ["featured", "isNew", "isLatest"] as const) {
     if (has(flag)) out[flag] = body[flag] === true;
     else if (!partial) out[flag] = false;

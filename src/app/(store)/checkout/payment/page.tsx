@@ -8,10 +8,12 @@ import { formatPrice } from "@/lib/format";
 import { Order } from "@/lib/types";
 import { PaymentAccountDetails } from "@/lib/payment-details";
 import { Upload, Building2, Smartphone, MessageCircle } from "lucide-react";
-import { SITE, getWhatsAppUrl } from "@/lib/site-config";
+import { useStoreSettings } from "@/context/StoreSettingsContext";
+import { whatsAppUrl } from "@/lib/settings-types";
 import { compressImage } from "@/lib/compress-image";
 
 function PaymentContent() {
+  const store = useStoreSettings();
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
@@ -186,13 +188,13 @@ function PaymentContent() {
         <p className="text-xs text-stone-500 text-center pt-2">
           Need help?{" "}
           <a
-            href={getWhatsAppUrl(`Hi, I need help with order ${order.orderNumber}`)}
+            href={whatsAppUrl(store.whatsapp, `Hi, I need help with order ${order.orderNumber}`)}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[#128C7E] hover:underline"
           >
             <MessageCircle size={14} />
-            WhatsApp {SITE.phone}
+            WhatsApp {store.phone}
           </a>
         </p>
       </form>
