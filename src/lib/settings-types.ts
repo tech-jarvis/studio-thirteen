@@ -3,6 +3,9 @@
  * Safe to import from client components (no server-only code).
  */
 import { SITE } from "@/lib/site-config";
+import { ONLINE_DISCOUNT_PERCENT } from "@/lib/pricing";
+
+const OFF = `${ONLINE_DISCOUNT_PERCENT}%`;
 
 export type SectionToggle = { show: boolean; title: string };
 
@@ -73,7 +76,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       eyebrow: "We Deal in Brands Only",
       title: "Premium Branded\nLawn & Suits",
       subtitle:
-        "Unstitched 2pc & 3pc, embroidered collections, and patches. Minimum order Rs. 1,000. Cash on delivery, or pay by bank transfer for 5% off.",
+        `Unstitched 2pc & 3pc, embroidered collections, and patches. Minimum order Rs. 1,000. Cash on delivery, or pay by bank transfer for ${OFF} off.`,
       primaryLabel: "Shop Now",
       primaryLink: "/shop",
       secondaryLabel: "View Sale",
@@ -88,8 +91,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     },
     promo: {
       show: true,
-      title: "5% Off on Bank Transfer",
-      text: "Transfer to our account and upload your payment screenshot to save 5%. Prefer cash on delivery? That works too — choose at checkout.",
+      title: `${OFF} Off on Bank Transfer`,
+      text: `Transfer to our account and upload your payment screenshot to save ${OFF}. Prefer cash on delivery? That works too — choose at checkout.`,
       buttonLabel: "Start Shopping",
       buttonLink: "/shop",
     },
@@ -105,13 +108,13 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     deliveryDays: SITE.deliveryDays,
     announcement: {
       show: true,
-      text: `Minimum order Rs. 1,000 · Delivery ${SITE.deliveryDays} · 5% off on bank transfer`,
+      text: `Minimum order Rs. 1,000 · Delivery ${SITE.deliveryDays} · ${OFF} off on bank transfer`,
     },
     social: { instagram: "", facebook: "", tiktok: "" },
     seo: {
       title: "Studio Thirteen — Premium Branded Fashion",
       description:
-        "Shop branded lawn, embroidered 2pc & 3pc suits, patches, and more. Cash on delivery or bank transfer with 5% off.",
+        `Shop branded lawn, embroidered 2pc & 3pc suits, patches, and more. Cash on delivery or bank transfer with ${OFF} off.`,
     },
   },
   pages: {

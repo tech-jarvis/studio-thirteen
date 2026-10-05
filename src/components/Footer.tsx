@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { StoreSettings, whatsAppUrl } from "@/lib/settings-types";
+import { ONLINE_DISCOUNT_PERCENT } from "@/lib/pricing";
 
 export default function Footer({
   store,
@@ -104,7 +105,7 @@ export default function Footer({
 
         <div className="border-t border-stone-700 mt-12 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-stone-500">
           <p>© {new Date().getFullYear()} {store.businessName}. All rights reserved.</p>
-          <p>Prices in PKR · 5% off on bank transfer</p>
+          <p>Prices in PKR · {ONLINE_DISCOUNT_PERCENT}% off on bank transfer</p>
         </div>
       </div>
     </footer>

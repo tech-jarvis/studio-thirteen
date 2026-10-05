@@ -35,6 +35,8 @@ export default function AdminProductsPage() {
   /** Upload progress 0–100 while a video is uploading, otherwise null. */
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [error, setError] = useState("");
+  /** null until checked; false when Supabase Storage isn't set up on this server. */
+  const [storageReady, setStorageReady] = useState<boolean | null>(null);
 
   function load() {
     Promise.all([
@@ -46,7 +48,13 @@ export default function AdminProductsPage() {
     });
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    fetch("/api/storage/status")
+      .then((r) => r.json())
+      .then((d) => setStorageReady(d.storage === "supabase"))
+      .catch(() => setStorageReady(null));
+  }, []);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -214,8 +222,19 @@ export default function AdminProductsPage() {
       <p className="text-sm text-stone-500 mb-8">
         Data: <span className="font-medium">Supabase Postgres</span>
         {" · "}
-        Images: <span className="font-medium">Supabase Storage</span>
+        Images: <span className="font-medium">{storageReady === false ? "Database (fallback)" : "Supabase Storage"}</span>
       </p>
+
+      {storageReady === false && (
+        <div className="mb-8 p-4 border border-amber-300 bg-amber-50 text-sm text-amber-900">
+          <p className="font-medium">Supabase Storage isn&apos;t set up on this server, so video uploads are off.</p>
+          <p className="mt-1">
+            Images are being saved inside the database instead, which fills the free plan quickly. Add{" "}
+            <code>SUPABASE_URL</code> and <code>SUPABASE_SECRET_KEY</code> to your hosting environment variables
+            (Netlify → Site configuration → Environment variables), then redeploy.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="bg-white border border-stone-200 p-6 mb-8 space-y-4">
         <div className="flex items-center justify-between">

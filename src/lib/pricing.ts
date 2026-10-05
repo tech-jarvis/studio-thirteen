@@ -1,6 +1,6 @@
 export const MIN_ORDER_AMOUNT = 1000;
 export const SHIPPING_FEE = 300;
-export const ONLINE_DISCOUNT_PERCENT = 5;
+export const ONLINE_DISCOUNT_PERCENT = 4;
 
 export function calculateOrderTotals(
   subtotal: number,
