@@ -1,5 +1,5 @@
 import type postgres from "postgres";
-import { getSql } from "./client";
+import { getSql, getTxSql } from "./client";
 import { Category, Product, Order } from "@/lib/types";
 import {
   mapCategory,
@@ -269,11 +269,10 @@ export async function dbDeleteProduct(id: string) {
 }
 
 export async function dbAddOrder(order: Order) {
-  const sql = getSql();
   const db = orderToDb(order);
 
   // Throwing inside begin() rolls back every stock decrement made so far.
-  const inserted = await sql.begin(async (tx) => {
+  const inserted = await getTxSql().begin(async (tx) => {
     for (const item of order.items) {
       const updated = await tx`
         UPDATE products
@@ -305,9 +304,8 @@ export async function dbAddOrder(order: Order) {
 }
 
 export async function dbUpdateOrder(id: string, updates: Partial<Order>) {
-  const sql = getSql();
 
-  const rows = await sql.begin(async (tx) => {
+  const rows = await getTxSql().begin(async (tx) => {
     const existingRows = (await tx`
       SELECT * FROM orders WHERE id = ${id} LIMIT 1 FOR UPDATE
     `) as unknown as DbOrder[];
